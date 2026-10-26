@@ -1,0 +1,44 @@
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
+const supabase = createClient('https://cymrqyxknfocewznwpcn.supabase.co','sb_publishable_DyjUfhmrSzg3nGe06OV8Rw_lwmHV4hA');
+const $ = id => document.getElementById(id);
+const products = [
+ {name:'Apples',group:'Fruits',icon:'🍎',keyword:'apple'},
+ {name:'Carrots',group:'Vegetables',icon:'🥕',keyword:'carrot'},
+ {name:'Milk',group:'Dairy',icon:'🥛',keyword:'milk'},
+ {name:'Chicken',group:'Meat & protein',icon:'🍗',keyword:'chicken'},
+ {name:'Whole-grain bread',group:'Grains',icon:'🍞',keyword:'bread'},
+ {name:'Eggs',group:'Meat & protein',icon:'🥚',keyword:'egg'}
+];
+const groups=[['Meat & protein','🥩'],['Dairy','🧀'],['Vegetables','🥦'],['Fruits','🍓'],['Grains','🌾']];
+let user=null, mode='login', country='CA';
+const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node};
+function msg(text,error=false){$('status').textContent=text;$('status').classList.toggle('error',error)}
+function money(value){return new Intl.NumberFormat(country==='CA'?'en-CA':'en-US',{style:'currency',currency:country==='CA'?'CAD':'USD'}).format(Number(value)||0)}
+function showAuth(){ $('authBox').classList.remove('hidden');$('authBox').scrollIntoView({behavior:'smooth',block:'center'});}
+function updateAuthUI(){ $('memberArea').classList.toggle('hidden',!user);$('guestCallout').classList.toggle('hidden',!!user);$('accountButton').classList.toggle('hidden',!!user);$('signOut').classList.toggle('hidden',!user);$('authBox').classList.add('hidden');$('userEmail').textContent=user?.email||'';if(user)loadPrivate();}
+function updateMode(next){mode=next;$('authSubmit').textContent=mode==='login'?'Sign in':'Create account';$('loginTab').className='btn '+(mode==='login'?'':'light');$('registerTab').className='btn '+(mode==='register'?'':'light');$('password').autocomplete=mode==='login'?'current-password':'new-password'}
+function renderCards(query=''){const target=$('deals');target.replaceChildren();const matches=products.filter(p=>!query||p.name.toLowerCase().includes(query)||p.group.toLowerCase().includes(query));if(!matches.length){target.append(el('p','muted','No example matches. Save the item in your watchlist so you can track it when live deals arrive.'));return;}
+ for(const p of matches){const card=el('article','card deal');card.append(el('div','emoji',p.icon),el('span','tag',p.group),el('h3','',p.name),el('p','muted','Sample category listing · no verified store price'));const b=el('button','btn light small','Watch this item');b.addEventListener('click',()=>{if(!user){msg('Sign in to save a grocery watch.');showAuth();return;}$('watchTerm').value=p.keyword;$('watchTerm').focus();$('watchTerm').scrollIntoView({behavior:'smooth',block:'center'})});card.append(b);target.append(card)}}
+function renderGroups(){const root=$('categories');root.replaceChildren();for(const [name,icon] of groups){const card=el('button','card');card.style.textAlign='left';card.append(el('div','emoji',icon),el('h3','',name),el('p','muted','Browse example products'));card.addEventListener('click',()=>{const item=products.find(p=>p.group===name);$('searchInput').value=item?item.group:name;renderCards(name.toLowerCase());$('deals').scrollIntoView({behavior:'smooth'})});root.append(card)}}
+async function loadPrivate(){if(!user)return;await Promise.all([loadReceipts(),loadWatches()]);}
+async function loadReceipts(){const {data,error}=await supabase.from('receipts').select('id,store_name,total,savings,purchased_at,country_code').eq('user_id',user.id).eq('country_code',country).order('purchased_at',{ascending:false}).limit(200);if(error){msg(error.message,true);return}
+ $('count').textContent=String(data.length);$('spent').textContent=money(data.reduce((s,r)=>s+Number(r.total),0));$('saved').textContent=money(data.reduce((s,r)=>s+Number(r.savings),0));
+ const list=$('receiptList');list.replaceChildren();if(!data.length){list.append(el('p','muted','No receipts yet in this country.'));return}
+ for(const r of data){const row=el('div','entry');const label=el('div');label.append(el('strong','',r.store_name),el('div','fine',r.purchased_at+' · '+money(r.total)+' total · '+money(r.savings)+' saved'));const remove=el('button','btn light small','Delete');remove.addEventListener('click',async()=>{if(!confirm('Delete this receipt?'))return;const {error}=await supabase.from('receipts').delete().eq('id',r.id).eq('user_id',user.id);if(error)msg(error.message,true);else loadReceipts()});row.append(label,remove);list.append(row)}
+}
+async function loadWatches(){const {data,error}=await supabase.from('saved_searches').select('id,term,created_at').eq('user_id',user.id).eq('country_code',country).order('created_at',{ascending:false}).limit(100);if(error){msg(error.message,true);return}
+ const list=$('watchList');list.replaceChildren();if(!data.length){list.append(el('p','muted','Nothing on your watchlist yet.'));return}
+ for(const r of data){const row=el('div','entry');const label=el('div');label.append(el('strong','',r.term),el('div','fine','Saved for future deal alerts'));const remove=el('button','btn light small','Remove');remove.addEventListener('click',async()=>{const {error}=await supabase.from('saved_searches').delete().eq('id',r.id).eq('user_id',user.id);if(error)msg(error.message,true);else loadWatches()});row.append(label,remove);list.append(row)}
+}
+$('accountButton').addEventListener('click',showAuth);$('joinNow').addEventListener('click',()=>{updateMode('register');showAuth()});
+$('loginTab').addEventListener('click',()=>updateMode('login'));$('registerTab').addEventListener('click',()=>updateMode('register'));
+$('authForm').addEventListener('submit',async e=>{e.preventDefault();const email=$('email').value.trim(),password=$('password').value;$('authSubmit').disabled=true;try{const result=mode==='login'?await supabase.auth.signInWithPassword({email,password}):await supabase.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});if(result.error)throw result.error;msg(mode==='login'?'Signed in.':result.data.session?'Account created.':'Account created. Check your email to confirm your address.');if(result.data.user&&result.data.session){user=result.data.user;updateAuthUI()}}catch(err){msg(err.message||'Authentication failed.',true)}finally{$('authSubmit').disabled=false}});
+$('signOut').addEventListener('click',async()=>{const {error}=await supabase.auth.signOut();if(error){msg(error.message,true);return}user=null;updateAuthUI();msg('Signed out.')});
+$('country').addEventListener('change',()=>{country=$('country').value;renderCards($('searchInput').value.trim().toLowerCase());if(user)loadPrivate();msg(country==='CA'?'Showing Canadian records in CAD.':'Showing US records in USD.')});
+$('searchButton').addEventListener('click',()=>renderCards($('searchInput').value.trim().toLowerCase()));$('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')renderCards($('searchInput').value.trim().toLowerCase())});
+$('receiptForm').addEventListener('submit',async e=>{e.preventDefault();if(!user){showAuth();return}const store=$('store').value.trim(),total=Number($('total').value),savings=Number($('savings').value),purchased_at=$('purchaseDate').value;if(!store||!purchased_at||!Number.isFinite(total)||total<0||!Number.isFinite(savings)||savings<0){msg('Check the receipt fields.',true);return}
+ const submit=$('receiptForm').querySelector('button[type=submit]');submit.disabled=true;const {error}=await supabase.from('receipts').insert({user_id:user.id,store_name:store,total,savings,purchased_at,country_code:country});submit.disabled=false;if(error)msg(error.message,true);else{$('receiptForm').reset();$('purchaseDate').value=new Date().toLocaleDateString('en-CA');$('savings').value='0';msg('Receipt saved to your private account.');loadReceipts()}});
+$('watchForm').addEventListener('submit',async e=>{e.preventDefault();if(!user){showAuth();return}const term=$('watchTerm').value.trim().toLowerCase();if(term.length<2)return;const {error}=await supabase.from('saved_searches').insert({user_id:user.id,term,country_code:country});if(error)msg(error.code==='23505'?'That item is already on your list.':error.message,error.code!=='23505');else{$('watchTerm').value='';msg('Item saved to your watchlist.');loadWatches()}});
+$('year').textContent=String(new Date().getFullYear());$('purchaseDate').value=new Date().toLocaleDateString('en-CA');renderGroups();renderCards();updateMode('login');
+supabase.auth.onAuthStateChange((_event,session)=>{const next=session?.user||null;if(user?.id===next?.id)return;user=next;updateAuthUI()});
+const {data:{user:currentUser},error:initError}=await supabase.auth.getUser();if(initError&&initError.name!=='AuthSessionMissingError')msg(initError.message,true);user=currentUser||null;updateAuthUI();
