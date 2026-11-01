@@ -19,6 +19,13 @@ export default function Home() {
           <p className="mt-3 text-sm">Product photos, prices and savings will appear here when verified against retailer sources. No sample prices are presented as live offers.</p>
         </div>
       </section>
+      <section aria-labelledby="giveaway-heading" className="mt-8 rounded-2xl border-2 border-[#d9ad37] bg-[#09266c] p-6 text-center">
+        <p className="text-sm font-bold uppercase tracking-widest text-[#f8d76e]">G SOFTWARE DEVELOPMENTS</p>
+        <h2 id="giveaway-heading" className="mt-2 font-serif text-3xl font-bold text-[#f8d76e]">Community Giveaway Fund</h2>
+        <p className="mt-3 text-4xl font-black text-white">Pending payment integration</p>
+        <p className="mt-2 text-sm text-[#f8e4a7]">Cart Snag membership: $10.99/year. $0.99 from each eligible paid membership is allocated to the giveaway fund.</p>
+        <p className="mt-3 text-xs text-[#eadba7]">The live counter will activate only after verified payment, refund and allocation records are connected. Giveaway eligibility, rules and entry methods will be published before launch.</p>
+      </section>
       <TravelCalculator />
       <section aria-labelledby="groups-heading" className="mt-12">
         <h2 id="groups-heading" className="text-center font-serif text-3xl font-bold text-[#f8d76e]">Shop by Food Group</h2>
