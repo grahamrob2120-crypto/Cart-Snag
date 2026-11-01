@@ -1,3 +1,4 @@
+import TravelCalculator from './travel-calculator';
 const groups = [{name:'Meat',emoji:'🥩'},{name:'Dairy',emoji:'🧀'},{name:'Vegetables',emoji:'🥕'},{name:'Fruits',emoji:'🍎'},{name:'Grains',emoji:'🌾'}] as const;
 export default function Home() {
   return <main className="min-h-screen bg-[#03164b] text-white">
@@ -18,11 +19,7 @@ export default function Home() {
           <p className="mt-3 text-sm">Product photos, prices and savings will appear here when verified against retailer sources. No sample prices are presented as live offers.</p>
         </div>
       </section>
-      <section aria-labelledby="travel-heading" className="mt-8 rounded-xl border border-[#d9ad37] bg-[#09266c] p-6">
-        <h2 id="travel-heading" className="text-xl font-bold text-[#f8d76e]">🚗 Is the farther store actually cheaper?</h2>
-        <p className="mt-2 text-sm">Cart Snag compares grocery prices with estimated extra round-trip fuel cost, using store distance, vehicle fuel consumption and fuel price. The cheapest shelf price may not be the best overall deal.</p>
-        <p className="mt-2 text-xs text-[#e4d6aa]">Travel estimates require your location, route distance and fuel assumptions. Calculations are not active in this preview.</p>
-      </section>
+      <TravelCalculator />
       <section aria-labelledby="groups-heading" className="mt-12">
         <h2 id="groups-heading" className="text-center font-serif text-3xl font-bold text-[#f8d76e]">Shop by Food Group</h2>
         <ul className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-5">{groups.map(g=><li key={g.name} className="rounded-xl border-2 border-[#d9ad37] bg-[#09266c] p-4 text-center text-lg font-semibold"><span aria-hidden="true">{g.emoji}</span> {g.name}</li>)}</ul>
