@@ -1,31 +1,33 @@
-const groups = ['Meat', 'Dairy', 'Vegetables', 'Fruits', 'Grains'] as const;
+const groups = [{name:'Meat',emoji:'🥩'},{name:'Dairy',emoji:'🧀'},{name:'Vegetables',emoji:'🥕'},{name:'Fruits',emoji:'🍎'},{name:'Grains',emoji:'🌾'}] as const;
 export default function Home() {
-  return <main className="min-h-screen bg-slate-50 text-slate-950">
-    <header className="border-b bg-white px-5 py-4">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-        <div><p className="text-xs font-bold tracking-widest text-green-800">G SOFTWARE DEVELOPMENTS</p><h1 className="text-3xl font-black">Cart Snag</h1></div>
-        <span className="rounded-full bg-green-50 px-4 py-2 text-sm font-semibold text-green-900">Canada / USA</span>
+  return <main className="min-h-screen bg-[#03164b] text-white">
+    <header className="border-b-4 border-[#e9b940] bg-[#061b59] px-5 py-4">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
+        <div><p className="text-xs font-bold tracking-widest text-[#f4d67b]">G SOFTWARE DEVELOPMENTS</p><h1 className="text-4xl font-black italic tracking-tight text-[#f8d76e]">🛒 Cart Snag</h1></div>
+        <p className="max-w-md text-center text-sm italic text-[#f8e4a7]">Created for the people. Founded by the people. Built to serve the people.</p>
+        <span className="rounded-lg border border-[#e9b940] px-4 py-2 text-sm">Canada / USA</span>
       </div>
     </header>
-    <div className="mx-auto max-w-6xl px-5 py-5">
-      
-      <section aria-labelledby="deals-heading" className="mt-2">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div><p className="font-bold uppercase tracking-wide text-orange-700">Your member storefront</p><h2 id="deals-heading" className="text-4xl font-black tracking-tight sm:text-5xl">🔥 Hottest Deals of the Day</h2></div>
-          <span className="text-sm text-slate-500">Verified local grocery offers only</span>
-        </div>
-        <div className="mt-5 min-h-64 rounded-2xl border-2 border-orange-300 bg-gradient-to-br from-orange-50 to-white p-8 shadow-lg">
-          <p className="mb-3 inline-block rounded-full bg-orange-600 px-4 py-1 text-sm font-extrabold text-white">TODAY’S TOP SAVINGS</p><h3 className="text-2xl font-black">Deals are being connected</h3>
-          <p className="mt-2 text-sm">No verified live retailer offers are available in this build yet. Product photos, current prices, savings and store links will appear here only after source and location verification.</p>
+    <nav className="mx-auto flex max-w-7xl flex-wrap gap-5 border-b border-[#d5a735] px-5 py-4 text-sm font-semibold text-[#f9e6ad]"><span>Shop by Food Group</span><span className="text-white">Hottest Deals</span><span>Beat Our Price</span><span>Grocery Prices</span><span>My Savings</span></nav>
+    <div className="mx-auto max-w-7xl px-5 py-8">
+      <section aria-labelledby="deals-heading">
+        <h2 id="deals-heading" className="text-center font-serif text-4xl italic text-[#f8d76e] sm:text-6xl">🔥 Hottest Deals of the Day</h2>
+        <p className="mx-auto mt-5 max-w-xl rounded-xl border border-[#f9d66e] bg-gradient-to-r from-[#b5810c] via-[#ffdc70] to-[#b5810c] px-5 py-3 text-center text-xl font-black tracking-wide text-[#071b58]">TODAY’S TOP SAVINGS</p>
+        <div className="mt-7 rounded-2xl border-2 border-[#d9ad37] bg-white p-8 text-center text-[#0a235b] shadow-xl">
+          <h3 className="text-2xl font-bold">Verified deals coming online</h3>
+          <p className="mt-3 text-sm">Product photos, prices and savings will appear here when verified against retailer sources. No sample prices are presented as live offers.</p>
         </div>
       </section>
-      <section aria-labelledby="categories-heading" className="mt-14">
-        <h2 id="categories-heading" className="text-lg font-bold text-slate-600">Shop by food group</h2>
-        <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {groups.map(group => <li key={group} className="rounded-xl border bg-white p-5 text-center font-bold shadow-sm">{group}</li>)}
-        </ul>
+      <section aria-labelledby="travel-heading" className="mt-8 rounded-xl border border-[#d9ad37] bg-[#09266c] p-6">
+        <h2 id="travel-heading" className="text-xl font-bold text-[#f8d76e]">🚗 Is the farther store actually cheaper?</h2>
+        <p className="mt-2 text-sm">Cart Snag compares grocery prices with estimated extra round-trip fuel cost, using store distance, vehicle fuel consumption and fuel price. The cheapest shelf price may not be the best overall deal.</p>
+        <p className="mt-2 text-xs text-[#e4d6aa]">Travel estimates require your location, route distance and fuel assumptions. Calculations are not active in this preview.</p>
       </section>
-      <p className="mt-10 text-xs text-slate-500">Created for the people. Founded by the people. Built to serve the people. Production rebuild preview. Paid access control and live pricing are not enabled. Do not deploy publicly.</p>
+      <section aria-labelledby="groups-heading" className="mt-12">
+        <h2 id="groups-heading" className="text-center font-serif text-3xl font-bold text-[#f8d76e]">Shop by Food Group</h2>
+        <ul className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-5">{groups.map(g=><li key={g.name} className="rounded-xl border-2 border-[#d9ad37] bg-[#09266c] p-4 text-center text-lg font-semibold"><span aria-hidden="true">{g.emoji}</span> {g.name}</li>)}</ul>
+      </section>
+      <p className="mt-10 text-center text-xs text-[#d8c99d]">Development preview only. Paid access and verified retailer integrations are not active. Not approved for public launch.</p>
     </div>
   </main>;
 }
