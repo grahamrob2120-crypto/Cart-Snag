@@ -44,3 +44,11 @@ test('password recovery requests at least eight characters',()=>{
   assert.match(app,/PASSWORD_RECOVERY/);
   assert.match(app,/password\.length>=8/);
 });
+
+test('private data loads reject responses from a previous account or country',()=>{
+  assert.match(app,/let privateLoadVersion=0/);
+  assert.match(app,/const version=\+\+privateLoadVersion/);
+  assert.match(app,/version!==privateLoadVersion/);
+  assert.match(app,/requestUserId!==user\?\.id/);
+  assert.match(app,/requestCountry!==country/);
+});
