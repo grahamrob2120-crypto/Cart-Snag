@@ -35,3 +35,12 @@ test('switching countries never launches an external flyer website',()=>{
   assert.ok(handler,'Country change handler must exist');
   assert.doesNotMatch(handler[1],/openFlyers\s*\(/);
 });
+
+test('registration requires at least eight characters without blocking existing account sign-in',()=>{
+  assert.match(html,/Password \(at least 8 characters for new accounts\)/);
+  assert.match(app,/\$\('password'\)\.minLength=mode==='register'\?8:0/);
+});
+test('password recovery requests at least eight characters',()=>{
+  assert.match(app,/PASSWORD_RECOVERY/);
+  assert.match(app,/password\.length>=8/);
+});
