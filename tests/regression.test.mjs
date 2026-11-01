@@ -29,3 +29,9 @@ test('browser code contains no server-side credentials',()=>{
   assert.doesNotMatch(app,/sb_secret_|service_role/);
   assert.doesNotMatch(html,/sb_secret_|service_role/);
 });
+
+test('switching countries never launches an external flyer website',()=>{
+  const handler=app.match(/\\$\\('country'\\)\\.addEventListener\\('change',\\(\\)=>\\{([\\s\\S]*?)\\}\\);/);
+  assert.ok(handler,'Country change handler must exist');
+  assert.doesNotMatch(handler[1],/openFlyers\\s*\\(/);
+});
