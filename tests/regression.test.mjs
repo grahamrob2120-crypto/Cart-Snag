@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const app=readFileSync(new URL('../app.js',import.meta.url),'utf8');
-const ids=[...html.matchAll(/\\bid="([^"]+)"/g)].map(m=>m[1]);
+const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
 test('all HTML ids are unique',()=>assert.equal(new Set(ids).size,ids.length));
 test('every local navigation anchor resolves to an element',()=>{
   for(const [,target] of html.matchAll(/href="#([^"]+)"/g))
     assert.ok(ids.includes(target),'Missing anchor target: '+target);
 });
 test('every JavaScript DOM id resolves to a page element',()=>{
-  for(const [,id] of app.matchAll(/\\$\\('([^']+)'\\)/g))
+  for(const [,id] of app.matchAll(/\$\('([^']+)'\)/g))
     assert.ok(ids.includes(id),'Missing JavaScript element: '+id);
 });
 test('core account and receipt workflows remain available',()=>{
