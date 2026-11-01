@@ -7,9 +7,51 @@
 
 /* Professional retail visual system — presentation only; preserve all application hooks. */
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;color:#172a27;background:#f7f8f7}body{background:#f7f8f7}header{box-shadow:0 1px 7px #102b1b0a;border-bottom:1px solid #e4e9e6}.wrap{max-width:1240px}.brand{font-size:25px;letter-spacing:-.9px;color:#163f32;display:flex;align-items:center}.mascot{width:38px;height:38px;background:#163f32;color:#fff;border-radius:9px;font-size:14px;font-weight:900;letter-spacing:-.5px;margin-right:11px}.btn{border-radius:7px;background:#126747;font-size:14px;transition:background .15s ease}.btn:hover:not(:disabled){background:#0c4b35}.btn.light{background:#e9f1ec;color:#18513c}.btn.light:hover:not(:disabled){background:#d9e8df}.btn.dark{background:#233b33}.hero{margin-top:25px;border-radius:13px;background:#fff;color:#193c30;border:1px solid #e1e8e3;padding:48px 45px;grid-template-columns:1.35fr .8fr;box-shadow:0 8px 28px #132a1d08}.hero h1{font-size:clamp(36px,4.4vw,58px);letter-spacing:-2px;line-height:1.08;margin:16px 0}.hero p{font-size:16px;color:#546b60;line-height:1.65}.hero .pill{background:#e8f2ec;color:#1c6347;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-radius:5px}.hero-art{font-size:inherit;filter:none;text-align:left;display:flex;flex-direction:column;justify-content:center;gap:15px}.hero-metric{background:#f3f7f4;border:1px solid #e1eae4;border-radius:10px;padding:21px 23px}.hero-metric span{display:block;color:#277052;font-size:11px;font-weight:800;letter-spacing:1.3px}.hero-metric strong{display:block;color:#203e32;font-size:20px;letter-spacing:-.5px;margin:8px 0}.hero-metric small{color:#687b71;font-size:13px}.search{border:1px solid #d8e3db;border-radius:8px;padding:5px;box-shadow:0 2px 12px #0b281008}.search input{border:0;background:transparent}.sectionhead h2{font-size:24px;letter-spacing:-.7px}.grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:13px}.card{border-radius:10px;border-color:#e0e8e2;box-shadow:0 3px 14px #132c2406}.grid .card{padding:19px 17px;min-height:150px;transition:transform .15s ease,border-color .15s ease}.grid .card:hover{transform:translateY(-2px);border-color:#92bba5}.grid .card .emoji{font-size:26px;line-height:1.3;filter:grayscale(1);opacity:.65}.grid .card h3{font-size:16px;color:#1b3d30;letter-spacing:-.3px;margin:12px 0 6px}.grid .card p{font-size:12px;line-height:1.4;margin:0}.notice{background:#f1f5f2;border:1px solid #e0e8e2;color:#4a6256;border-radius:8px}.panel{margin-top:22px}.panel.card{padding:26px}.stat{background:#f1f6f2;border-radius:9px}.stat strong{color:#166b48}input,select{border-radius:7px;border-color:#d5e0d8}footer{border-top:1px solid #e5ebe6;margin-top:35px}@media(max-width:900px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero{grid-template-columns:1fr;padding:32px}.hero-art{display:grid;grid-template-columns:1fr 1fr}}@media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{padding:26px 20px}.hero-art{grid-template-columns:1fr}.hero h1{font-size:38px}.hero-metric{padding:15px}.grid .card{min-height:130px}.wrap{padding:15px}.search{flex-wrap:wrap}.search button{width:100%}}
+
+/* Cart Snag — Premium Savings direction, November 2026 */
+:root{color:#f6f4ef;background:#090909;color-scheme:dark}
+body{background:#090909;color:#f6f4ef}
+header{background:#111;border-bottom:1px solid #303030;box-shadow:0 4px 24px #0007}
+.brand{color:#fff}.brand .mascot{background:#d81721;color:#fff}
+.wrap{max-width:1240px}
+.tools select{background:#202020;color:#fff;border:1px solid #464646}
+.btn{background:#d81925;color:#fff;border-radius:8px}
+.btn:hover:not(:disabled){background:#f12b36}
+.btn.light{background:#2b2020;color:#fff}
+.btn.light:hover:not(:disabled){background:#443030}
+.btn.dark{background:#292929;color:#fff}
+.hero{position:relative;background:linear-gradient(116deg,#160b0d 0%,#36070d 52%,#0e0b0b 100%);border:1px solid #6b1c23;color:#fff;box-shadow:0 12px 40px #0007;overflow:hidden}
+.hero:before{content:"";position:absolute;right:-100px;top:-140px;width:470px;height:470px;background:radial-gradient(circle,#d5162833,transparent 68%);pointer-events:none}
+.hero>div{position:relative;z-index:1}
+.hero h1{color:#fff;text-transform:uppercase;font-style:italic;font-weight:950;letter-spacing:-1.8px}
+.hero h1::first-line{color:#fff}
+.hero p{color:#f1d8d8}
+.hero .pill{background:#e9ad19;color:#1a1306;font-weight:900}
+.hero-metric{background:#170f11;border:1px solid #72303a;box-shadow:0 4px 16px #0004}
+.hero-metric span{color:#ffbe2d}.hero-metric strong{color:#fff}.hero-metric small{color:#d2bfc1}
+.search{background:#fff;border:2px solid #fff;box-shadow:0 5px 20px #0005}
+.search input{color:#171717;background:#fff}
+.sectionhead h2,.panel h2{color:#fff}
+.muted,.fine{color:#b5aeae}
+.card,.panel.card{background:#171717;border:1px solid #373030;color:#f6f4ef;box-shadow:0 5px 20px #0004}
+.grid .card{background:linear-gradient(145deg,#211315,#121212);border:1px solid #5b252b}
+.grid .card:hover{border-color:#f1ad1c;transform:translateY(-3px)}
+.grid .card h3{color:#fff}.grid .card .emoji{filter:none;opacity:1}
+.notice{background:#211b12;color:#ead8ac;border:1px solid #715626}
+.notice strong{color:#ffcb54}
+.stat{background:#251b1c;border:1px solid #4a3031}.stat strong{color:#ffbf37}
+input,select{background:#242424;color:#fff;border:1px solid #514b4b}
+input::placeholder{color:#aaa}
+.entry{border-bottom-color:#383030}
+.status{color:#ffcc64}.status.error{color:#ff7777}
+.tag{background:#40201d;color:#ffcf6a}.price{color:#ffcb45}
+footer{color:#aaa;border-top:1px solid #383030}
+a{color:#ffca57}
+.account .btn.light,.tabs .btn.light{color:#fff}
+@media(max-width:600px){.hero{padding:28px 20px}.hero h1{font-size:36px}}
 </style></head><body>
-<header><div class="wrap top"><div class="brand"><span class="mascot" aria-label="Cart Snag logo">CS</span>Cart Snag</div><div class="tools"><select id="country" aria-label="Country"><option value="CA">🇨🇦 Canada (CAD)</option><option value="US">🇺🇸 United States (USD)</option></select><button class="btn light" id="accountButton">Sign in / Join</button><button class="btn dark hidden" id="signOut">Sign out</button></div></div></header>
-<main class="wrap"><section class="hero"><div><span class="pill">G Software Developments</span><h1>Groceries cost enough.<br>Pay less.</h1><p>Created for the people. Founded by the people. Built to serve the people. Find smarter grocery deals, keep your receipts, and track savings in one place.</p><div class="search"><input id="searchInput" placeholder="Search milk, eggs, apples, chicken…" aria-label="Find a grocery item"><button class="btn" id="searchButton">Find deals</button></div></div><div class="hero-art" aria-label="Grocery savings highlights"><div class="hero-metric"><span>SHOP SMARTER</span><strong>Compare grocery offers</strong><small>Across Canada and the United States</small></div><div class="hero-metric"><span>STAY ORGANIZED</span><strong>Track receipts & savings</strong><small>Your history in one secure account</small></div></div></section>
+<header><div class="wrap top"><div class="brand"><span class="mascot" aria-label="Cart Snag logo">CS</span>Cart <span style="color:#ee2631;margin-left:5px">Snag</span></div><div class="tools"><select id="country" aria-label="Country"><option value="CA">🇨🇦 Canada (CAD)</option><option value="US">🇺🇸 United States (USD)</option></select><button class="btn light" id="accountButton">Sign in / Join</button><button class="btn dark hidden" id="signOut">Sign out</button></div></div></header>
+<main class="wrap"><section class="hero"><div><span class="pill">G Software Developments · Premium Savings</span><h1>Grocery deals<br>that hit hard.</h1><p>Created for the people. Founded by the people. Built to serve the people. Find smarter grocery deals, keep your receipts, and track savings in one place.</p><div class="search"><input id="searchInput" placeholder="Search milk, eggs, apples, chicken…" aria-label="Find a grocery item"><button class="btn" id="searchButton">Find deals</button></div></div><div class="hero-art" aria-label="Grocery savings highlights"><div class="hero-metric"><span>DEALS THAT MATTER</span><strong>Compare grocery offers</strong><small>Across Canada and the United States</small></div><div class="hero-metric"><span>KEEP MORE MONEY</span><strong>Track receipts & savings</strong><small>Your history in one secure account</small></div></div></section>
 <div id="status" class="status" role="status"></div>
 <div class="notice"><strong>Verified retailer offers only:</strong> Browse current local grocery flyers using the retailer-deal link below. Cart Snag does not display unverified prices.</div>
 <section><div class="sectionhead"><h2>Explore the five food groups</h2><span class="muted">Shop by category</span></div><div id="categories" class="grid"></div></section>
