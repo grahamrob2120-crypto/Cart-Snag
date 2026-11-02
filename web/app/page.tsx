@@ -32,6 +32,22 @@ export default function Home() {
         </div>
         <p className="mt-6 text-center text-xs text-[#f1dc9b]">Prices, discounts and store logos will appear only after verified retailer data is available. No fictional deals.</p>
       </section>
+      <section id="savings-engine" aria-labelledby="savings-engine-title" className="mt-8 overflow-hidden rounded-[24px] border-[3px] border-[#e9ba4e] bg-gradient-to-br from-[#103ca2] via-[#09266c] to-[#03123e] px-5 py-8 shadow-[0_12px_28px_rgba(0,0,0,.35)] sm:px-9">
+        <div className="flex flex-wrap items-center justify-between gap-5">
+          <div className="max-w-3xl">
+            <p className="text-xs font-black uppercase tracking-[.24em] text-[#f8d67c]">The Cart Snag advantage</p>
+            <h2 id="savings-engine-title" className="mt-2 font-serif text-3xl font-black text-white sm:text-5xl">The Engine That Finds Your Real Savings</h2>
+            <p className="mt-4 text-base leading-7 text-[#e5ecff]">A low shelf price isn't always the cheapest shopping trip. Cart Snag is being built to compare verified local grocery prices, account for the cost of travel, and show where your grocery budget goes further.</p>
+          </div>
+          <a href="#travel-calculator" className="rounded-full border-2 border-[#fff0b2] bg-gradient-to-b from-[#fff1ad] to-[#e2a820] px-6 py-3 text-center text-sm font-black text-[#07194c] shadow-[0_5px_0_#80550d]">Explore the savings calculator</a>
+        </div>
+        <div className="mt-7 grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-[#d8b65a] bg-white/95 p-5 text-[#07194c]"><p className="text-xs font-black uppercase tracking-widest text-[#7e580c]">01 · Compare</p><h3 className="mt-2 text-xl font-black">Find the lowest verified price</h3><p className="mt-2 text-sm leading-6 text-[#46516a]">Compare equivalent groceries across supported major retailers, with store and location matching.</p></div>
+          <div className="rounded-2xl border border-[#d8b65a] bg-white/95 p-5 text-[#07194c]"><p className="text-xs font-black uppercase tracking-widest text-[#7e580c]">02 · Calculate</p><h3 className="mt-2 text-xl font-black">Subtract the cost of getting there</h3><p className="mt-2 text-sm leading-6 text-[#46516a]">Estimate whether a farther store or a multi-store route is worth the additional travel.</p></div>
+          <div className="rounded-2xl border border-[#d8b65a] bg-white/95 p-5 text-[#07194c]"><p className="text-xs font-black uppercase tracking-widest text-[#7e580c]">03 · Save</p><h3 className="mt-2 text-xl font-black">Shop to your budget</h3><p className="mt-2 text-sm leading-6 text-[#46516a]">Build a practical grocery plan with the Portion Machine, eligible coupons and verified prices when connected.</p></div>
+        </div>
+        <p className="mt-5 text-xs text-[#f3dda6]">Savings engine integrations are under development. No live savings results are claimed in this preview.</p>
+      </section>
       <section aria-labelledby="groups-heading" className="mt-8 rounded-2xl border-t-2 border-[#d6a02a] pt-5">
         <h2 id="groups-heading" className="text-center font-serif text-3xl font-black italic text-[#ffe28b] sm:text-4xl">Shop by Food Group</h2>
         <ul className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-5">{groups.map(g=><li key={g.name} className="rounded-2xl border-[3px] border-[#e5ae34] bg-gradient-to-b from-[#0a3caa] to-[#04144d] p-4 text-center text-lg font-bold shadow-[0_5px_0_#60410e]"><span className="block overflow-hidden rounded-xl"><img src={g.photo} alt="" loading="lazy" className="mb-3 h-24 w-full object-cover" /></span>{g.name}</li>)}</ul>
