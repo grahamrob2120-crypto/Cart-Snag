@@ -19,3 +19,12 @@ test('sorts same product by normalized unit price', () => {
   const result=compareOffers([base,{...base,retailerId:'chain-2',priceMinor:300}],{locationId:'regina',currency:'CAD',now:Date.parse(now)});
   assert.equal(result[0].offers[0].retailerId,'chain-2');
 });
+
+test('rejects deceptive retailer URLs and malformed price timestamps', () => {
+  for (const sourceUrl of ['https://example.com@evil.test/milk', 'https://', 'https://example.com\\n.evil.test/milk', 'https://user:pass@example.com/milk']) {
+    assert.throws(() => validateObservation({...base, sourceUrl}), sourceUrl);
+  }
+  for (const observedAt of [null, 123, 'not-a-date']) {
+    assert.throws(() => validateObservation({...base, observedAt}));
+  }
+});
