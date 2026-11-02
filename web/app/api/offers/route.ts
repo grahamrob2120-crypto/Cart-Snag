@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     userId = user.id;
     const membershipUrl = new URL('/rest/v1/cart_snag_subscriptions', url);
-    membershipUrl.searchParams.set('select', 'status');
+    membershipUrl.searchParams.set('select', 'status,current_period_end');
     membershipUrl.searchParams.set('user_id', 'eq.' + userId);
     membershipUrl.searchParams.set('status', 'eq.active');
     membershipUrl.searchParams.set('limit', '1');
@@ -34,7 +34,12 @@ export async function GET(request: NextRequest) {
     if (!membership.ok) return NextResponse.json({ error: 'Membership verification unavailable' }, { status: 503 });
     const records: unknown = await membership.json();
     if (!Array.isArray(records)) return NextResponse.json({ error: 'Membership verification unavailable' }, { status: 503 });
-    if (records.length === 0) return NextResponse.json({ error: 'Active membership required' }, { status: 403 });
+    const entitled = records.some((record: unknown) => {
+      if (!record || typeof record !== 'object' || !('current_period_end' in record)) return false;
+      const end = record.current_period_end;
+      return typeof end === 'string' && Number.isFinite(Date.parse(end)) && Date.parse(end) > Date.now();
+    });
+    if (!entitled) return NextResponse.json({ error: 'Active membership required' }, { status: 403 });
   } catch {
     return NextResponse.json({ error: 'Membership verification unavailable' }, { status: 503 });
   }
