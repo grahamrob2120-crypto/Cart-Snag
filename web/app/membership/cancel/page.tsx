@@ -1,0 +1,1 @@
+export default function MembershipCancel() { return <main className="mx-auto max-w-xl p-8"><h1 className="text-3xl font-bold">Checkout cancelled</h1><p className="mt-4">Your PayPal checkout was not completed here. No membership has been activated.</p><a className="mt-6 inline-block underline" href="/">Return to Cart Snag</a></main>; }
