@@ -9,8 +9,12 @@ export function validateObservation(o) {
   if (!Number.isSafeInteger(o.priceMinor) || o.priceMinor < 0) throw new Error('Invalid price');
   if (!Number.isFinite(o.quantity) || o.quantity <= 0) throw new Error('Invalid quantity');
   if (!['g','kg','ml','l','each'].includes(o.unit)) throw new Error('Invalid unit');
-  if (typeof o.sourceUrl !== 'string' || !/^https:\/\//.test(o.sourceUrl)) throw new Error('Invalid source URL');
-  if (!Number.isFinite(Date.parse(o.observedAt))) throw new Error('Invalid timestamp');
+  if (typeof o.sourceUrl !== 'string') throw new Error('Invalid source URL');
+  try {
+    const url = new URL(o.sourceUrl);
+    if (url.protocol !== 'https:' || !url.hostname || url.username || url.password || /[\\r\\n]/.test(o.sourceUrl)) throw new Error('Invalid source URL');
+  } catch { throw new Error('Invalid source URL'); }
+  if (typeof o.observedAt !== 'string' || !Number.isFinite(Date.parse(o.observedAt))) throw new Error('Invalid timestamp');
   if (o.verified !== true) throw new Error('Unverified price');
   return Object.freeze({...o});
 }
