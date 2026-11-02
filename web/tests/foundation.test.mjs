@@ -19,3 +19,5 @@ test('paid grocery offers require server-side identity and active membership', (
 });
 
 test('verified offers reject unsafe source links and invalid units', () => { const source = read('../app/api/offers/route.ts'); assert.match(source, /parsed\.protocol === 'https:'/); assert.match(source, /!parsed\.username && !parsed\.password/); assert.match(source, /row\.unit_quantity > 0/); });
+
+test('member storefront product search is connected to validated server query', () => { const ui = read('../app/verified-offers.tsx'); const api = read('../app/api/offers/route.ts'); assert.match(ui, /q:query\.trim\(\)/); assert.match(ui, /type="search"/); assert.match(api, /search\.length > 80/); assert.match(api, /params\.set\('product_name'/); });
