@@ -12,7 +12,15 @@ export function presentPrice(offer, {now = new Date(), currency, maxAgeMs = 60 *
     retryAt: nextHourlyRetry(now).toISOString()
   };
   return {
-    label: new Intl.NumberFormat('en-CA', {style:'currency',currency}).format(offer.priceMinor / 100),
+    label: new Intl.NumberFormat('en-CA', {style:'currency',currency,currencyDisplay:'code'}).format(offer.priceMinor / 100).replace(/^CAD\\s*/, 'CA,
+    available: true, priceMinor: offer.priceMinor, retryAt: null
+  };
+}
+).replace(/^USD\\s*/, 'US,
+    available: true, priceMinor: offer.priceMinor, retryAt: null
+  };
+}
+),
     available: true, priceMinor: offer.priceMinor, retryAt: null
   };
 }
