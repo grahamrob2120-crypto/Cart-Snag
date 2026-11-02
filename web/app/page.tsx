@@ -48,6 +48,7 @@ export default function Home() {
         </div>
         <p className="mt-5 text-xs text-[#f3dda6]">Savings engine integrations are under development. No live savings results are claimed in this preview.</p>
       </section>
+      <div id="travel-calculator" className="scroll-mt-6"><TravelCalculator /></div>
       <section aria-labelledby="groups-heading" className="mt-8 rounded-2xl border-t-2 border-[#d6a02a] pt-5">
         <h2 id="groups-heading" className="text-center font-serif text-3xl font-black italic text-[#ffe28b] sm:text-4xl">Shop by Food Group</h2>
         <ul className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-5">{groups.map(g=><li key={g.name} className="rounded-2xl border-[3px] border-[#e5ae34] bg-gradient-to-b from-[#0a3caa] to-[#04144d] p-4 text-center text-lg font-bold shadow-[0_5px_0_#60410e]"><span className="block overflow-hidden rounded-xl"><img src={g.photo} alt="" loading="lazy" className="mb-3 h-24 w-full object-cover" /></span>{g.name}</li>)}</ul>
@@ -69,7 +70,6 @@ export default function Home() {
         <p className="mt-2 text-sm text-[#f8e4a7]">Cart Snag membership: $10.99/year. $0.99 from each eligible paid membership is allocated to the Loyalty Jackpot Giveaway. One eligible recipient receives the available fund balance when an award is made.</p>
         <p className="mt-3 text-xs text-[#eadba7]">The live counter will activate only after verified payment, refund and allocation records are connected. Award eligibility and selection rules will be published before launch. Awards are based on eligibility and confidential hardship assessment, not a random draw. Recipient assessment is confidential, and sharing an award publicly is never required.</p>
       </section>
-      <TravelCalculator />
       <p className="mt-10 text-center text-xs text-[#d8c99d]">Development preview only. Paid access and verified retailer integrations are not active. Not approved for public launch.</p>
     </div>
   </main>;
