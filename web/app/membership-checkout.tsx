@@ -59,7 +59,7 @@ export default function MembershipCheckout() {
       const result: { approveUrl?: string; error?: string } = await response.json();
       if (!response.ok || !result.approveUrl) throw Error(result.error || 'Checkout unavailable');
       const target = new URL(result.approveUrl);
-      if (target.protocol !== 'https:' || !/(^|\\.)paypal\\.com$/.test(target.hostname)) throw Error('Invalid checkout destination');
+      if (target.protocol !== 'https:' || !(target.hostname === 'paypal.com' || target.hostname.endsWith('.paypal.com'))) throw Error('Invalid checkout destination');
       window.location.assign(target.href);
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Checkout unavailable'); setBusy(false); }
   }
