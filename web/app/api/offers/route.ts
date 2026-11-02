@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
     const records: unknown = await membership.json();
     if (!Array.isArray(records)) return NextResponse.json({ error: 'Membership verification unavailable' }, { status: 503 });
     const entitled = records.some((record: unknown) => {
+      if (!('status' in (record as object)) || (record as { status?: unknown }).status !== 'active') return false;
       if (!record || typeof record !== 'object' || !('current_period_end' in record)) return false;
       const end = record.current_period_end;
       return typeof end === 'string' && Number.isFinite(Date.parse(end)) && Date.parse(end) > Date.now();
