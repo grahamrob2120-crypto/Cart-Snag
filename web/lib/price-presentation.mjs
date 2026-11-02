@@ -12,7 +12,7 @@ export function presentPrice(offer, {now = new Date(), currency, maxAgeMs = 60 *
     retryAt: nextHourlyRetry(now).toISOString()
   };
   return {
-    label: new Intl.NumberFormat('en-CA', {style:'currency',currency,currencyDisplay:'code'}).format(offer.priceMinor / 100).replace(/^CAD\\s*/, 'CA,
+    label: (currency === 'CAD' ? 'CA$' : 'US$') + (offer.priceMinor / 100).toFixed(2),
     available: true, priceMinor: offer.priceMinor, retryAt: null
   };
 }
