@@ -27,6 +27,12 @@ export default function VerifiedOffers() {
  const [offers,setOffers]=useState<Offer[]>([]);
  const [message,setMessage]=useState('Sign in above to browse verified member offers.');
  const [busy,setBusy]=useState(false);
+ useEffect(() => {
+  generation.current++;
+  setOffers([]);
+  setBusy(false);
+  setMessage('Search for current verified prices in the selected country and food group.');
+ }, [country, group, query, store]);
  async function search(e:React.FormEvent){e.preventDefault();const requestGeneration=++generation.current;setBusy(true);setOffers([]);try{
  const {client}=await getAuthClient();const {data:auth,error}=await client.auth.getSession();if(error||!auth.session)throw new Error('Sign in required');
  const response=await fetch('/api/offers?'+new URLSearchParams({country,group,q:query.trim(),store:store.trim()}),{headers:{Authorization:'Bearer '+auth.session.access_token},cache:'no-store'});
