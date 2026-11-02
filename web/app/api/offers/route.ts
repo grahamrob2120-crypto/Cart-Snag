@@ -58,9 +58,9 @@ export async function GET(request: NextRequest) {
       if (!offer || typeof offer !== 'object') return false;
       const row = offer as Record<string, unknown>;
       const verified = typeof row.verified_at === 'string' ? Date.parse(row.verified_at) : NaN;
-      return Number.isFinite(verified) && verified >= now - 86400000 && verified <= now &&
+      const source = typeof row.source_url === 'string' ? row.source_url : '';\n      let validSource = false;\n      try { const parsed = new URL(source); validSource = parsed.protocol === 'https:' && Boolean(parsed.hostname) && !parsed.username && !parsed.password; } catch { /* invalid source */ }\n      return validSource && Number.isFinite(verified) && verified >= now - 86400000 && verified <= now &&
         typeof row.price_minor === 'number' && Number.isSafeInteger(row.price_minor) && row.price_minor >= 0 &&
-        row.food_group === group && row.currency === (country === 'CA' ? 'CAD' : 'USD');
+        row.food_group === group && row.currency === (country === 'CA' ? 'CAD' : 'USD') &&\n        typeof row.unit_quantity === 'number' && Number.isFinite(row.unit_quantity) && row.unit_quantity > 0;
     });
     return NextResponse.json({ offers, message: offers.length ? undefined : 'Unavailable at this time' }, { headers: { 'Cache-Control': 'no-store' } });
   } catch { return NextResponse.json({ error: 'Offers unavailable', offers: [] }, { status: 503 }); }
