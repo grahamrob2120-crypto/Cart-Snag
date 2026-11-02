@@ -55,10 +55,10 @@ export default function Home() {
       </section>
       <section aria-label="Cart Snag membership" className="mt-8 rounded-2xl border-2 border-[#f5d77b] bg-gradient-to-r from-[#092a86] to-[#07194c] p-6 text-center">
         <p className="text-sm font-bold uppercase tracking-[.2em] text-[#ffe28b]">More savings. Less spending.</p>
-        <h2 className="mt-2 text-3xl font-black text-white">Cart Snag Membership</h2>
-        <p className="mt-2 text-5xl font-black text-[#ffe28b]">$10.99<span className="text-lg text-white"> / year</span></p>
-        <p className="mx-auto mt-3 max-w-xl text-sm text-[#f4e8bd]">Get access to verified grocery comparisons, budget-first meal planning, price alerts and member savings when services launch.</p>
-        <p className="mt-4 inline-block rounded-full bg-gradient-to-b from-[#fff1a4] to-[#d89d10] px-8 py-3 text-base font-black text-[#07194c]">Membership checkout coming soon</p>
+        <h2 className="mt-2 text-3xl font-black text-white">Your grocery savings membership</h2>
+        <p className="mt-3 text-6xl font-black tracking-tight text-[#ffe28b] sm:text-7xl">$0.92<span className="ml-2 text-xl font-semibold text-white">/ month equivalent</span></p><p className="mt-2 text-base font-semibold text-white">Billed annually at $10.99 — one payment per year</p><p className="mt-1 text-xs text-[#e9dfb7]">$10.99 ÷ 12 = $0.9158, rounded to $0.92 per month. Not a monthly billing plan.</p>
+        <p className="mx-auto mt-3 max-w-xl text-sm text-[#f4e8bd]">One simple annual membership. Built to help you compare grocery prices, plan meals around your budget, and avoid trips that cost more than they save. Features become available as verified integrations launch.</p>
+        <p className="mt-5 inline-block rounded-full bg-gradient-to-b from-[#fff1a4] to-[#d89d10] px-8 py-3 text-base font-black text-[#07194c]">Membership checkout coming soon</p>
         <p className="mt-2 text-xs text-[#e3d8ad]">Subscriptions are not yet available. No payment will be collected here.</p>
       </section>
       <section aria-labelledby="giveaway-heading" className="mt-8 rounded-2xl border-2 border-[#d9ad37] bg-[#09266c] p-6 text-center">
