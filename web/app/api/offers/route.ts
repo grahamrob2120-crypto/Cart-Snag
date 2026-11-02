@@ -46,6 +46,8 @@ export async function GET(request: NextRequest) {
   const group = request.nextUrl.searchParams.get('group');
   const country = request.nextUrl.searchParams.get('country');
   const search = (request.nextUrl.searchParams.get('q') ?? '').trim();
+  const store = (request.nextUrl.searchParams.get('store') ?? '').trim();
+  if (store.length > 120 || /[\u0000-\u001f\u007f]/.test(store)) return NextResponse.json({ error: 'Invalid store location' }, { status: 400 });
   if (search.length > 80 || /[\u0000-\u001f\u007f]/.test(search)) return NextResponse.json({ error: 'Invalid product search' }, { status: 400 });
   if (!isFoodGroup(group) || (country !== 'CA' && country !== 'US')) return NextResponse.json({ error: 'Invalid search filters' }, { status: 400 });
   try {
@@ -53,6 +55,9 @@ export async function GET(request: NextRequest) {
     const recent = new Date(now - 24 * 60 * 60 * 1000).toISOString();
     const params = new URLSearchParams({ verified_at: 'gte.' + recent, select: 'id,retailer,store_location,product_name,food_group,currency,price_minor,unit_quantity,unit_label,source_url,verified_at', country: 'eq.' + country, food_group: 'eq.' + group, expires_at: 'gt.' + new Date().toISOString(), order: 'price_minor.asc', limit: '50' });
     const safeSearch = search.replace(/[*,().%_\\]/g, '').trim();
+    const safeStore = store.replace(/[*,().%_\\]/g, '').trim();
+    if (store && !safeStore) return NextResponse.json({ error: 'Enter a valid store location' }, { status: 400 });
+    if (safeStore) params.set('store_location', 'ilike.*' + safeStore + '*');
     if (search && !safeSearch) return NextResponse.json({ error: 'Enter a searchable product name' }, { status: 400 });
     if (safeSearch) params.set('product_name', 'ilike.*' + safeSearch + '*');
     const result = await fetch(url + '/rest/v1/cart_snag_offers?' + params.toString(), { headers: { apikey: anonKey, authorization: token }, cache: 'no-store' });
