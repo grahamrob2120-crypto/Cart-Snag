@@ -7,6 +7,37 @@ export async function GET(request: NextRequest) {
   if (!url || !anonKey) return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
   const token = request.headers.get('authorization');
   if (!token?.startsWith('Bearer ') || token.length > 4096 || !token.slice(7).trim()) return NextResponse.json({ error: 'Sign in required' }, { status: 401 });
+  // Validate identity and paid entitlement on the server; a bearer token alone is insufficient.
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return NextResponse.json({ error: 'Membership verification unavailable' }, { status: 503 });
+  let userId: string;
+  try {
+    const identity = await fetch(new URL('/auth/v1/user', url), {
+      headers: { apikey: anonKey, authorization: token }, cache: 'no-store',
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!identity.ok) return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
+    const user: unknown = await identity.json();
+    if (!user || typeof user !== 'object' || !('id' in user) ||
+        typeof user.id !== 'string' || !/^[0-9a-f-]{36}$/i.test(user.id))
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    userId = user.id;
+    const membershipUrl = new URL('/rest/v1/cart_snag_subscriptions', url);
+    membershipUrl.searchParams.set('select', 'status');
+    membershipUrl.searchParams.set('user_id', 'eq.' + userId);
+    membershipUrl.searchParams.set('status', 'eq.active');
+    membershipUrl.searchParams.set('limit', '1');
+    const membership = await fetch(membershipUrl, {
+      headers: { apikey: serviceKey, authorization: 'Bearer ' + serviceKey },
+      cache: 'no-store', signal: AbortSignal.timeout(10000),
+    });
+    if (!membership.ok) return NextResponse.json({ error: 'Membership verification unavailable' }, { status: 503 });
+    const records: unknown = await membership.json();
+    if (!Array.isArray(records)) return NextResponse.json({ error: 'Membership verification unavailable' }, { status: 503 });
+    if (records.length === 0) return NextResponse.json({ error: 'Active membership required' }, { status: 403 });
+  } catch {
+    return NextResponse.json({ error: 'Membership verification unavailable' }, { status: 503 });
+  }
   const group = request.nextUrl.searchParams.get('group');
   const country = request.nextUrl.searchParams.get('country');
   if (!isFoodGroup(group) || (country !== 'CA' && country !== 'US')) return NextResponse.json({ error: 'Invalid search filters' }, { status: 400 });
