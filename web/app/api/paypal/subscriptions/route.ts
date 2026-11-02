@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     existingUrl.searchParams.set('select', 'paypal_subscription_id,status');
     existingUrl.searchParams.set('user_id', 'eq.' + userId);
     existingUrl.searchParams.set('environment', 'eq.' + environment);
-    existingUrl.searchParams.set('status', 'in.(pending,active,approved,suspended)');
+    existingUrl.searchParams.set('status', 'in.(pending,active,suspended)');
     const existingResponse = await fetch(existingUrl, { headers: dbHeaders, cache: 'no-store', signal: AbortSignal.timeout(10000) });
     if (!existingResponse.ok) return error('Unable to verify existing memberships', 503);
     const existing: unknown = await existingResponse.json();
