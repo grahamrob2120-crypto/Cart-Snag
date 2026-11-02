@@ -1,4 +1,5 @@
 import MembershipCheckout from './membership-checkout';
+import VerifiedOffers from './verified-offers';
 import TravelCalculator from './travel-calculator';
 const groups = [
   {name:'Meat',photo:'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=720&q=85',detail:'Fresh cuts and family packs'},
@@ -49,6 +50,7 @@ export default function Home() {
         </div>
         <p className="mt-5 text-xs text-[#f3dda6]">Savings engine integrations are under development. No live savings results are claimed in this preview.</p>
       </section>
+      <VerifiedOffers />
       <div id="travel-calculator" className="scroll-mt-6"><TravelCalculator /></div>
       <section aria-labelledby="groups-heading" className="mt-8 rounded-2xl border-t-2 border-[#d6a02a] pt-5">
         <h2 id="groups-heading" className="text-center font-serif text-3xl font-black italic text-[#ffe28b] sm:text-4xl">Shop by Food Group</h2>
