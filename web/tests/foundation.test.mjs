@@ -8,3 +8,12 @@ test('health endpoint disables caching', () => assert.match(read('../app/api/hea
 test('no secrets are embedded in starter application', () => { for (const p of ['../app/page.tsx','../app/layout.tsx','../app/api/health/route.ts']) assert.doesNotMatch(read(p), /sb_secret_[A-Za-z0-9]{8,}|(?:sk_live_|sk_test_)[A-Za-z0-9]{8,}/); });
 
 test('offers API filters stale and invalid prices on the server', () => { const source = read('../app/api/offers/route.ts'); assert.match(source, /verified_at: 'gte\.'/); assert.match(source, /Number\.isSafeInteger\(row\.price_minor\)/); assert.match(source, /verified <= now/); assert.match(source, /row\.currency ===/); });
+
+test('paid grocery offers require server-side identity and active membership', () => {
+ const source = read('../app/api/offers/route.ts');
+ assert.match(source, /\/auth\/v1\/user/);
+ assert.match(source, /cart_snag_subscriptions/);
+ assert.match(source, /status', 'eq\.active'/);
+ assert.match(source, /Active membership required/);
+ assert.match(source, /status: 403/);
+});
