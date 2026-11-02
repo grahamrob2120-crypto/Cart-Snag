@@ -10,7 +10,13 @@ export default function Home() {
       </div>
     </header>
     <nav className="mx-auto flex max-w-7xl flex-wrap gap-5 border-b border-[#d5a735] px-5 py-4 text-sm font-semibold text-[#f9e6ad]"><span>Shop by Food Group</span><span className="text-white">Hottest Deals</span><span>Beat Our Price</span><span>Grocery Prices</span><span>My Savings</span></nav>
-    <div className="mx-auto max-w-7xl px-5 py-8">\n      <section aria-label="Cart Snag mascot" className="mb-8 overflow-hidden rounded-2xl border-2 border-[#d9ad37] bg-gradient-to-r from-[#071b58] to-[#0b3181] p-4 sm:p-7">\n        <div className="grid items-center gap-5 md:grid-cols-2">\n          <img src="/cart-snag-raccoon.svg" alt="A mischievous raccoon races away with a grocery cart overflowing with food" className="h-auto w-full" />\n          <div className="text-center md:text-left"><p className="text-sm font-bold uppercase tracking-widest text-[#f8d76e]">G SOFTWARE DEVELOPMENTS PRESENTS</p><h2 className="mt-2 text-4xl font-black uppercase text-[#f8d76e]">Cart Snag</h2><p className="mt-3 text-2xl font-extrabold">So cheap, he thought he stole it!</p><p className="mt-3 text-sm text-[#f8e4a7]">Real grocery savings. Verified deals. Built for the people.</p></div>\n        </div>\n      </section>
+    <div className="mx-auto max-w-7xl px-5 py-8">
+      <section aria-label="Cart Snag mascot" className="mb-8 overflow-hidden rounded-2xl border-2 border-[#d9ad37] bg-gradient-to-r from-[#071b58] to-[#0b3181] p-4 sm:p-7">
+        <div className="grid items-center gap-5 md:grid-cols-2">
+          <img src="/cart-snag-raccoon.svg" alt="A mischievous raccoon races away with a grocery cart overflowing with food" className="h-auto w-full" />
+          <div className="text-center md:text-left"><p className="text-sm font-bold uppercase tracking-widest text-[#f8d76e]">G SOFTWARE DEVELOPMENTS PRESENTS</p><h2 className="mt-2 text-4xl font-black uppercase text-[#f8d76e]">Cart Snag</h2><p className="mt-3 text-2xl font-extrabold">So cheap, he thought he stole it!</p><p className="mt-3 text-sm text-[#f8e4a7]">Real grocery savings. Verified deals. Built for the people.</p></div>
+        </div>
+      </section>
       <section aria-labelledby="deals-heading">
         <h2 id="deals-heading" className="text-center font-serif text-4xl italic text-[#f8d76e] sm:text-6xl">🔥 Hottest Deals of the Day</h2>
         <p className="mx-auto mt-5 max-w-xl rounded-xl border border-[#f9d66e] bg-gradient-to-r from-[#b5810c] via-[#ffdc70] to-[#b5810c] px-5 py-3 text-center text-xl font-black tracking-wide text-[#071b58]">TODAY’S TOP SAVINGS</p>
@@ -22,7 +28,9 @@ export default function Home() {
       <section aria-labelledby="giveaway-heading" className="mt-8 rounded-2xl border-2 border-[#d9ad37] bg-[#09266c] p-6 text-center">
         <p className="text-sm font-bold uppercase tracking-widest text-[#f8d76e]">G SOFTWARE DEVELOPMENTS</p>
         <h2 id="giveaway-heading" className="mt-2 font-serif text-3xl font-bold text-[#f8d76e]">Cart Snag Loyalty Jackpot Giveaway</h2>
-        <div aria-label="Every membership grows the pot" className="mt-4 flex items-center justify-center gap-2 text-4xl font-black text-[#f8d76e]"><span>P</span><span aria-label="pot of gold" role="img" className="text-5xl">🪙</span><span>T</span></div>\n        <p className="mt-2 text-xl font-bold">Every membership grows the pot. One member gets the whole thing.</p>\n        <p className="mt-3 text-sm font-semibold text-white">Verified jackpot balance: pending payment integration</p>
+        <div aria-label="Every membership grows the pot" className="mt-4 flex items-center justify-center gap-2 text-4xl font-black text-[#f8d76e]"><span>P</span><span aria-label="pot of gold" role="img" className="text-5xl">🪙</span><span>T</span></div>
+        <p className="mt-2 text-xl font-bold">Every membership grows the pot. One member gets the whole thing.</p>
+        <p className="mt-3 text-sm font-semibold text-white">Verified jackpot balance: pending payment integration</p>
         <p className="mt-2 text-sm text-[#f8e4a7]">Cart Snag membership: $10.99/year. $0.99 from each eligible paid membership is allocated to the Loyalty Jackpot Giveaway. One eligible recipient receives the available fund balance when an award is made.</p>
         <p className="mt-3 text-xs text-[#eadba7]">The live counter will activate only after verified payment, refund and allocation records are connected. Award eligibility and selection rules will be published before launch. Awards are based on eligibility and confidential hardship assessment, not a random draw. Recipient assessment is confidential, and sharing an award publicly is never required.</p>
       </section>
