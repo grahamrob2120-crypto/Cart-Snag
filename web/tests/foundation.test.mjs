@@ -6,3 +6,5 @@ test('five food groups are defined without extra categories', () => { const page
 test('membership and live pricing are not falsely advertised as active', () => { const page = read('../app/page.tsx'); assert.match(page, /No live savings results are claimed/); assert.match(read('../app/api/paypal/subscriptions/route.ts'), /CART_SNAG_CHECKOUT_ENABLED !== 'true'/); assert.match(page, /No live savings results are claimed/); });
 test('health endpoint disables caching', () => assert.match(read('../app/api/health/route.ts'), /no-store/));
 test('no secrets are embedded in starter application', () => { for (const p of ['../app/page.tsx','../app/layout.tsx','../app/api/health/route.ts']) assert.doesNotMatch(read(p), /sb_secret_[A-Za-z0-9]{8,}|(?:sk_live_|sk_test_)[A-Za-z0-9]{8,}/); });
+
+test('offers API filters stale and invalid prices on the server', () => { const source = read('../app/api/offers/route.ts'); assert.match(source, /verified_at: 'gte\.'/); assert.match(source, /Number\.isSafeInteger\(row\.price_minor\)/); assert.match(source, /verified <= now/); assert.match(source, /row\.currency ===/); });
