@@ -69,8 +69,8 @@ export default function Home() {
           </div>
         </div>
         <p className="mx-auto mt-3 max-w-xl text-sm text-[#f4e8bd]">One monthly membership. The applicable country price and currency will be confirmed at checkout. No annual billing plan is offered.</p>
-        <p className="mt-5 inline-block rounded-full bg-gradient-to-b from-[#fff1a4] to-[#d89d10] px-8 py-3 text-base font-black text-[#07194c]">Membership checkout coming soon</p>
-        <p className="mt-2 text-xs text-[#e3d8ad]">Subscriptions are not yet available. No payment will be collected here.</p>
+        <div className="mx-auto mt-6 flex max-w-xl flex-col items-center gap-4 rounded-2xl border border-[#f5d77b] bg-[#041950] p-5 sm:flex-row"><img src="/cart-snag-original-mascot.webp" alt="Cart Snag Bandit mascot with groceries" width={180} height={120} className="w-40 rounded-xl border border-[#f5d77b] object-cover" /><div className="text-left"><p className="text-lg font-black text-[#ffe28b]">Bandit says: save more on groceries!</p><p className="mt-2 text-sm text-white">PayPal subscriptions are being connected securely. Your membership will be activated only after payment confirmation.</p></div></div><span aria-disabled="true" className="mt-5 inline-block cursor-not-allowed rounded-full bg-gradient-to-b from-[#fff1a4] to-[#d89d10] px-8 py-3 text-base font-black text-[#07194c] opacity-75">PayPal checkout — activation pending</span>
+        <p className="mt-2 text-xs text-[#e3d8ad]">Checkout is temporarily unavailable while live payment verification is completed. No payment will be collected here.</p>
       </section>
       <section aria-labelledby="giveaway-heading" className="mt-8 rounded-2xl border-2 border-[#d9ad37] bg-[#09266c] p-6 text-center">
         <p className="text-sm font-bold uppercase tracking-widest text-[#f8d76e]">G SOFTWARE DEVELOPMENTS</p>
