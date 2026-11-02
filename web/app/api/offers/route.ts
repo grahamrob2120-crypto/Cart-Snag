@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     if (safeStore) params.set('store_location', 'ilike.*' + safeStore + '*');
     if (search && !safeSearch) return NextResponse.json({ error: 'Enter a searchable product name' }, { status: 400 });
     if (safeSearch) params.set('product_name', 'ilike.*' + safeSearch + '*');
-    const result = await fetch(url + '/rest/v1/cart_snag_offers?' + params.toString(), { headers: { apikey: anonKey, authorization: token }, cache: 'no-store' });
+    const result = await fetch(url + '/rest/v1/cart_snag_offers?' + params.toString(), { headers: { apikey: anonKey, authorization: token }, cache: 'no-store', signal: AbortSignal.timeout(10000) });
     if (!result.ok) return NextResponse.json({ error: result.status === 401 ? 'Session expired' : 'Offers unavailable', offers: [] }, { status: result.status === 401 ? 401 : 503 });
     const data: unknown = await result.json();
     if (!Array.isArray(data)) return NextResponse.json({ error: 'Invalid offers response', offers: [] }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
