@@ -33,7 +33,7 @@ export default function MembershipCheckout() {
       });
       const result: { access_token?: string; error_description?: string; msg?: string } = await response.json();
       if (!response.ok) throw Error(result.error_description || result.msg || 'Authentication failed');
-      if (result.access_token) { setSession({ access_token: result.access_token }); setPassword(''); setMessage('Signed in successfully'); }
+      if (result.access_token) { setSession({ access_token: result.access_token }); window.dispatchEvent(new CustomEvent('cart-snag-session',{detail:{accessToken:result.access_token}})); setPassword(''); setMessage('Signed in successfully'); }
       else setMessage('Check your email to confirm your account, then sign in.');
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Authentication unavailable'); }
     finally { setBusy(false); }
@@ -76,7 +76,7 @@ export default function MembershipCheckout() {
       <div className="flex flex-wrap gap-3"><button type="submit" disabled={!config || busy} className="rounded-full bg-[#ffe28b] px-5 py-3 font-bold text-[#07194c] disabled:opacity-50">Sign in</button><button type="button" disabled={!config || busy} onClick={() => void authenticate('signup')} className="rounded-full border border-[#ffe28b] px-5 py-3 font-bold disabled:opacity-50">Create account</button></div>
       <button type="button" disabled={!config || busy} onClick={() => void resetPassword()} className="text-left text-sm underline disabled:opacity-50">Forgot password?</button>
     </form>}
-    {session && <button type="button" onClick={() => { setSession(null); setMessage('Signed out'); }} className="mt-3 text-sm underline">Sign out</button>}
+    {session && <button type="button" onClick={() => { setSession(null); window.dispatchEvent(new CustomEvent('cart-snag-session',{detail:{accessToken:''}})); setMessage('Signed out'); }} className="mt-3 text-sm underline">Sign out</button>}
     <button type="button" disabled={!session || !config?.checkoutEnabled || busy} onClick={() => void checkout()} className="mt-5 block w-full rounded-full bg-gradient-to-b from-[#fff1a4] to-[#d89d10] px-8 py-3 font-black text-[#07194c] disabled:cursor-not-allowed disabled:opacity-60">{busy ? 'Working…' : config?.checkoutEnabled ? 'Continue to PayPal' : 'PayPal checkout — activation pending'}</button>
     <p role="status" aria-live="polite" className="mt-3 text-sm text-[#ffe28b]">{message || (!config?.checkoutEnabled ? 'Payments are disabled until secure billing verification is complete. No payment will be collected.' : 'PayPal will confirm your recurring monthly charge before approval.')}</p>
   </div>;
