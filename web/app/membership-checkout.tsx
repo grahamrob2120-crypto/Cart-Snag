@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { getAuthClient } from '../lib/auth-client';
 
 type Country = 'CA' | 'US';
 type Config = { url: string; anonKey: string; checkoutEnabled: boolean };
@@ -14,27 +15,31 @@ export default function MembershipCheckout() {
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     let active = true;
-    fetch('/api/membership/config', { cache: 'no-store' }).then(async r => {
-      if (!r.ok) throw Error('Membership service unavailable');
-      return r.json() as Promise<Config>;
-    }).then(c => { if (active) setConfig(c); }).catch(() => { if (active) setMessage('Membership service unavailable'); });
-    return () => { active = false; };
+    let unsubscribe: (() => void) | undefined;
+    getAuthClient().then(({client, config: c}) => {
+      if (!active) return;
+      setConfig(c);
+      const { data } = client.auth.onAuthStateChange((event, next) => {
+        if (active) setSession(next);
+        if (event === 'PASSWORD_RECOVERY') window.location.assign('/account/update-password');
+      });
+      unsubscribe = () => data.subscription.unsubscribe();
+    }).catch(() => { if (active) setMessage('Membership service unavailable'); });
+    return () => { active = false; unsubscribe?.(); };
   }, []);
   async function authenticate(mode: 'signin' | 'signup') {
     if (!email.trim() || !password || password.length < 6) { setMessage('Enter a valid email and password of at least six characters.'); return; }
     if (!config || busy) return;
     setBusy(true); setMessage('');
     try {
-      const endpoint = mode === 'signin' ? '/auth/v1/token?grant_type=password' : '/auth/v1/signup';
-      const response = await fetch(config.url + endpoint, {
-        method: 'POST',
-        headers: { apikey: config.anonKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-      const result: { access_token?: string; error_description?: string; msg?: string } = await response.json();
-      if (!response.ok) throw Error(result.error_description || result.msg || 'Authentication failed');
-      if (result.access_token) { setSession({ access_token: result.access_token }); window.dispatchEvent(new CustomEvent('cart-snag-session',{detail:{accessToken:result.access_token}})); setPassword(''); setMessage('Signed in successfully'); }
-      else setMessage('Check your email to confirm your account, then sign in.');
+      const {client} = await getAuthClient();
+      const credentials = { email: email.trim(), password };
+      const {data, error} = mode === 'signin'
+        ? await client.auth.signInWithPassword(credentials)
+        : await client.auth.signUp({...credentials, options: {emailRedirectTo: window.location.origin}});
+      if (error) throw error;
+      setPassword('');
+      setMessage(data.session ? 'Signed in successfully' : 'Check your email to confirm your account, then sign in.');
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Authentication unavailable'); }
     finally { setBusy(false); }
   }
@@ -42,18 +47,33 @@ export default function MembershipCheckout() {
     if (!config || !email.trim()) { setMessage('Enter your email address first.'); return; }
     setBusy(true);
     try {
-      const response = await fetch(config.url + '/auth/v1/recover', { method: 'POST', headers: { apikey: config.anonKey, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim() }) });
-      if (!response.ok) throw Error('Password reset unavailable');
+      const {client} = await getAuthClient();
+      const {error} = await client.auth.resetPasswordForEmail(email.trim(), {redirectTo: window.location.origin + '/account/update-password'});
+      if (error) throw error;
       setMessage('If this account exists, password recovery instructions have been sent.');
     } catch { setMessage('Password reset unavailable'); } finally { setBusy(false); }
+  }
+  async function signOut() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const {client} = await getAuthClient();
+      const {error} = await client.auth.signOut({scope: 'local'});
+      if (error) throw error;
+      setMessage('Signed out');
+    } catch { setMessage('Sign out failed. Please try again.'); }
+    finally { setBusy(false); }
   }
   async function checkout() {
     if (!session || !config?.checkoutEnabled || busy) return;
     setBusy(true); setMessage('');
     try {
+      const {client} = await getAuthClient();
+      const {data, error} = await client.auth.getSession();
+      if (error || !data.session) throw Error('Sign in before subscribing');
       const response = await fetch('/api/paypal/subscriptions', {
         method: 'POST',
-        headers: { Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+        headers: { Authorization: 'Bearer ' + data.session.access_token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ country }),
       });
       const result: { approveUrl?: string; error?: string } = await response.json();
@@ -76,7 +96,7 @@ export default function MembershipCheckout() {
       <div className="flex flex-wrap gap-3"><button type="submit" disabled={!config || busy} className="rounded-full bg-[#ffe28b] px-5 py-3 font-bold text-[#07194c] disabled:opacity-50">Sign in</button><button type="button" disabled={!config || busy} onClick={() => void authenticate('signup')} className="rounded-full border border-[#ffe28b] px-5 py-3 font-bold disabled:opacity-50">Create account</button></div>
       <button type="button" disabled={!config || busy} onClick={() => void resetPassword()} className="text-left text-sm underline disabled:opacity-50">Forgot password?</button>
     </form>}
-    {session && <button type="button" onClick={() => { setSession(null); window.dispatchEvent(new CustomEvent('cart-snag-session',{detail:{accessToken:''}})); setMessage('Signed out'); }} className="mt-3 text-sm underline">Sign out</button>}
+    {session && <button type="button" disabled={busy} onClick={() => void signOut()} className="mt-3 text-sm underline">Sign out</button>}
     <button type="button" disabled={!session || !config?.checkoutEnabled || busy} onClick={() => void checkout()} className="mt-5 block w-full rounded-full bg-gradient-to-b from-[#fff1a4] to-[#d89d10] px-8 py-3 font-black text-[#07194c] disabled:cursor-not-allowed disabled:opacity-60">{busy ? 'Working…' : config?.checkoutEnabled ? 'Continue to PayPal' : 'PayPal checkout — activation pending'}</button>
     <p role="status" aria-live="polite" className="mt-3 text-sm text-[#ffe28b]">{message || (!config?.checkoutEnabled ? 'Payments are disabled until secure billing verification is complete. No payment will be collected.' : 'PayPal will confirm your recurring monthly charge before approval.')}</p>
   </div>;
