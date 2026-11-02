@@ -10,10 +10,14 @@ export default function TravelCalculator() {
   const values = [near, far, km, fuelUse, fuelPrice];
   const result = useMemo(() => {
     if (values.some(v => v.trim() === '' || !Number.isFinite(Number(v)) || Number(v) < 0)) return null;
-    return evaluateTravelOffers([
+    try {
+      return evaluateTravelOffers([
       {storeId:'Closer store', priceMinor:Math.round(Number(near)*100), incrementalRoundTripKm:0},
       {storeId:'Farther store', priceMinor:Math.round(Number(far)*100), incrementalRoundTripKm:Number(km)}
     ], Number(fuelUse), Math.round(Number(fuelPrice)*100));
+    } catch {
+      return null;
+    }
   }, [near, far, km, fuelUse, fuelPrice]);
   const inputs = [
     {label:'Closer store price',value:near,update:setNear},
@@ -33,7 +37,7 @@ export default function TravelCalculator() {
       <p className="text-lg font-black">Best overall: {result[0].storeId}</p>
       {result.map(item => <p key={item.storeId} className="mt-1 text-sm">{item.storeId}: {money(item.effectiveCostMinor)} total (extra fuel: {money(item.travelCostMinor)})</p>)}
       <p className="mt-2 font-bold">Estimated savings: {money(result[1].effectiveCostMinor - result[0].effectiveCostMinor)}</p>
-    </div> : <p role="alert" className="mt-4 text-amber-200">Enter valid non-negative numbers.</p>}
+    </div> : <p role="alert" className="mt-4 text-amber-200">Enter valid non-negative numbers within the supported calculation range.</p>}
     <p className="mt-3 text-xs text-[#eadba7]">Manual estimate, not live routing or pricing. Excludes parking, vehicle wear and travel time.</p>
   </section>;
 }
