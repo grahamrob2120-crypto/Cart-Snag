@@ -58,17 +58,17 @@ export default function Home() {
         <h2 className="mt-2 text-3xl font-black text-white">Your grocery savings membership</h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-[#f5d77b] bg-[#07194c] p-5">
-            <p className="text-sm font-bold uppercase tracking-widest text-[#ffe28b]">Annual plan</p>
-            <p className="mt-2 text-5xl font-black text-white">$10.99<span className="ml-2 text-base font-semibold">/ year</span></p>
-            <p className="mt-2 text-sm text-[#f4e8bd]">Billed once per year. Saves $0.89 versus 12 monthly payments.</p>
+            <p className="text-sm font-bold uppercase tracking-widest text-[#ffe28b]">Canada</p>
+            <p className="mt-2 text-5xl font-black text-white">$0.99 <span className="text-base font-semibold">CAD / month</span></p>
+            <p className="mt-2 text-sm text-[#f4e8bd]">Billed monthly in Canadian dollars.</p>
           </div>
           <div className="rounded-2xl border border-[#f5d77b] bg-[#07194c] p-5">
-            <p className="text-sm font-bold uppercase tracking-widest text-[#ffe28b]">Monthly plan</p>
-            <p className="mt-2 text-5xl font-black text-white">$0.99<span className="ml-2 text-base font-semibold">/ month</span></p>
-            <p className="mt-2 text-sm text-[#f4e8bd]">Automatically renews monthly until cancelled.</p>
+            <p className="text-sm font-bold uppercase tracking-widest text-[#ffe28b]">United States</p>
+            <p className="mt-2 text-5xl font-black text-white">$1.19 <span className="text-base font-semibold">USD / month</span></p>
+            <p className="mt-2 text-sm text-[#f4e8bd]">Billed monthly in US dollars.</p>
           </div>
         </div>
-        <p className="mx-auto mt-3 max-w-xl text-sm text-[#f4e8bd]">Choose one membership plan at checkout when subscriptions launch. Prices shown in your selected country's currency; final billing terms will be confirmed before payment.</p>
+        <p className="mx-auto mt-3 max-w-xl text-sm text-[#f4e8bd]">One monthly membership. The applicable country price and currency will be confirmed at checkout. No annual billing plan is offered.</p>
         <p className="mt-5 inline-block rounded-full bg-gradient-to-b from-[#fff1a4] to-[#d89d10] px-8 py-3 text-base font-black text-[#07194c]">Membership checkout coming soon</p>
         <p className="mt-2 text-xs text-[#e3d8ad]">Subscriptions are not yet available. No payment will be collected here.</p>
       </section>
@@ -78,7 +78,7 @@ export default function Home() {
         <div aria-label="Every membership grows the pot" className="mt-4 flex items-center justify-center gap-2 text-4xl font-black text-[#f8d76e]"><span>P</span><span aria-label="pot of gold" role="img" className="relative inline-flex h-16 w-20 items-center justify-center rounded-[50%] border-[5px] border-[#ffe59c] bg-gradient-to-br from-[#ffefad] via-[#efb72e] to-[#9d5d0c] text-[#422608] shadow-[inset_0_3px_7px_#fff4b5,0_6px_10px_#06163c]"><span className="absolute -top-3 h-5 w-16 rounded-[50%] border-4 border-[#ffe59c] bg-[#c78313]"></span><span className="relative z-10 text-3xl font-black">$</span></span><span>T</span></div>
         <p className="mt-2 text-xl font-bold">A member-funded reward, designed to help someone who needs it.</p>
         <p className="mt-3 text-sm font-semibold text-white">Verified jackpot balance: pending payment integration</p>
-        <p className="mt-2 text-sm text-[#f8e4a7]">Cart Snag membership: $0.92/month. Jackpot funding terms are under review and will be published before launch. One eligible recipient receives the available fund balance when an award is made.</p>
+        <p className="mt-2 text-sm text-[#f8e4a7]">Cart Snag membership: $0.99 CAD/month in Canada or $1.19 USD/month in the United States. Jackpot funding terms are under review and will be published before launch. One eligible recipient receives the available fund balance when an award is made.</p>
         <p className="mt-3 text-xs text-[#eadba7]">The live counter will activate only after verified payment, refund and allocation records are connected. Award eligibility and selection rules will be published before launch. Awards are based on eligibility and confidential hardship assessment, not a random draw. Recipient assessment is confidential, and sharing an award publicly is never required.</p>
       </section>
       <p className="mt-10 text-center text-xs text-[#d8c99d]">Development preview only. Paid access and verified retailer integrations are not active. Not approved for public launch.</p>
