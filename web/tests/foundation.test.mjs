@@ -17,3 +17,5 @@ test('paid grocery offers require server-side identity and active membership', (
  assert.match(source, /Active membership required/);
  assert.match(source, /status: 403/);
 });
+
+test('verified offers reject unsafe source links and invalid units', () => { const source = read('../app/api/offers/route.ts'); assert.match(source, /parsed\.protocol === 'https:'/); assert.match(source, /!parsed\.username && !parsed\.password/); assert.match(source, /row\.unit_quantity > 0/); });
