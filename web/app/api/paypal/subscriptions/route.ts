@@ -38,12 +38,16 @@ async function accessToken(base: string): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
+  // Explicitly disabled until subscription reconciliation and end-to-end billing tests pass.
+  if (process.env.CART_SNAG_CHECKOUT_ENABLED !== 'true') return error('Checkout is not yet available', 503);
   // No anonymous paid subscriptions: user identity must be verified before checkout.
   const auth = request.headers.get('authorization');
   if (!auth?.startsWith('Bearer ') || auth.length > 4096) return error('Sign in before subscribing', 401);
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) return error('Membership authentication is not configured', 503);
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return error('Membership persistence is not configured', 503);
   let userId: string;
   try {
     const userResponse = await fetch(new URL('/auth/v1/user', supabaseUrl), {
@@ -80,7 +84,21 @@ export async function POST(request: NextRequest) {
   } catch {
     return error('Checkout return origin is invalid', 503);
   }
+  const dbUrl = new URL('/rest/v1/cart_snag_subscriptions', supabaseUrl);
+  const dbHeaders = { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, 'Content-Type': 'application/json' };
+  const environment = process.env.PAYPAL_ENVIRONMENT;
+  if (environment !== 'sandbox' && environment !== 'live') return error('PayPal environment is not configured', 503);
   try {
+    const existingUrl = new URL(dbUrl);
+    existingUrl.searchParams.set('select', 'paypal_subscription_id,status');
+    existingUrl.searchParams.set('user_id', 'eq.' + userId);
+    existingUrl.searchParams.set('environment', 'eq.' + environment);
+    existingUrl.searchParams.set('status', 'in.(pending,active,approved,suspended)');
+    const existingResponse = await fetch(existingUrl, { headers: dbHeaders, cache: 'no-store', signal: AbortSignal.timeout(10000) });
+    if (!existingResponse.ok) return error('Unable to verify existing memberships', 503);
+    const existing: unknown = await existingResponse.json();
+    if (!Array.isArray(existing)) return error('Invalid membership response', 503);
+    if (existing.length > 0) return error('An existing membership requires review before another checkout', 409);
     const base = paypalBase();
     const token = await accessToken(base);
     const response = await fetch(base + '/v1/billing/subscriptions', {
@@ -111,6 +129,23 @@ export async function POST(request: NextRequest) {
     if (!approve || !('href' in approve) || typeof approve.href !== 'string') return error('PayPal approval link missing', 502);
     const approveUrl = new URL(approve.href);
     if (approveUrl.protocol !== 'https:' || !(approveUrl.hostname === 'paypal.com' || approveUrl.hostname.endsWith('.paypal.com'))) return error('Invalid PayPal approval destination', 502);
+    // Persist the customer association before returning an approval URL.
+    const save = await fetch(dbUrl, {
+      method: 'POST',
+      headers: { ...dbHeaders, Prefer: 'return=minimal' },
+      body: JSON.stringify({ user_id: userId, paypal_subscription_id: data.id, paypal_plan_id: planId, billing_interval: 'monthly', status: 'pending', environment }),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10000),
+    }).catch(() => null);
+    if (!save?.ok) {
+      // Best-effort cancellation of the unapproved PayPal subscription; never return approval URL.
+      await fetch(base + '/v1/billing/subscriptions/' + encodeURIComponent(data.id) + '/cancel', {
+        method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'Cart Snag membership persistence failed' }),
+        signal: AbortSignal.timeout(10000),
+      }).catch(() => undefined);
+      return error('Unable to secure membership record; checkout was not started', 503);
+    }
     return NextResponse.json({ subscriptionId: data.id, approveUrl: approveUrl.href, country, currency: plans[country].currency, amount: plans[country].amount }, { headers: { 'Cache-Control': 'no-store' } });
   } catch {
     return error('Subscription service is temporarily unavailable', 503);
