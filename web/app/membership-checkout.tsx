@@ -21,6 +21,7 @@ export default function MembershipCheckout() {
     return () => { active = false; };
   }, []);
   async function authenticate(mode: 'signin' | 'signup') {
+    if (!email.trim() || !password || password.length < 6) { setMessage('Enter a valid email and password of at least six characters.'); return; }
     if (!config || busy) return;
     setBusy(true); setMessage('');
     try {
@@ -36,6 +37,15 @@ export default function MembershipCheckout() {
       else setMessage('Check your email to confirm your account, then sign in.');
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Authentication unavailable'); }
     finally { setBusy(false); }
+  }
+  async function resetPassword() {
+    if (!config || !email.trim()) { setMessage('Enter your email address first.'); return; }
+    setBusy(true);
+    try {
+      const response = await fetch(config.url + '/auth/v1/recover', { method: 'POST', headers: { apikey: config.anonKey, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim() }) });
+      if (!response.ok) throw Error('Password reset unavailable');
+      setMessage('If this account exists, password recovery instructions have been sent.');
+    } catch { setMessage('Password reset unavailable'); } finally { setBusy(false); }
   }
   async function checkout() {
     if (!session || !config?.checkoutEnabled || busy) return;
@@ -64,6 +74,7 @@ export default function MembershipCheckout() {
       <label className="text-sm" htmlFor="membership-password">Password</label>
       <input id="membership-password" type="password" minLength={6} autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} className="rounded-lg bg-white p-3 text-[#07194c]" />
       <div className="flex flex-wrap gap-3"><button type="submit" disabled={!config || busy} className="rounded-full bg-[#ffe28b] px-5 py-3 font-bold text-[#07194c] disabled:opacity-50">Sign in</button><button type="button" disabled={!config || busy} onClick={() => void authenticate('signup')} className="rounded-full border border-[#ffe28b] px-5 py-3 font-bold disabled:opacity-50">Create account</button></div>
+      <button type="button" disabled={!config || busy} onClick={() => void resetPassword()} className="text-left text-sm underline disabled:opacity-50">Forgot password?</button>
     </form>}
     {session && <button type="button" onClick={() => { setSession(null); setMessage('Signed out'); }} className="mt-3 text-sm underline">Sign out</button>}
     <button type="button" disabled={!session || !config?.checkoutEnabled || busy} onClick={() => void checkout()} className="mt-5 block w-full rounded-full bg-gradient-to-b from-[#fff1a4] to-[#d89d10] px-8 py-3 font-black text-[#07194c] disabled:cursor-not-allowed disabled:opacity-60">{busy ? 'Working…' : config?.checkoutEnabled ? 'Continue to PayPal' : 'PayPal checkout — activation pending'}</button>
