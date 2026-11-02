@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
   try {
     const now = Date.now();
     const recent = new Date(now - 24 * 60 * 60 * 1000).toISOString();
-    const params = new URLSearchParams({ verified_at: 'gte.' + recent, select: 'id,retailer,store_location,product_name,food_group,currency,price_minor,unit_quantity,unit_label,source_url,verified_at', country: 'eq.' + country, food_group: 'eq.' + group, expires_at: 'gt.' + new Date().toISOString(), order: 'price_minor.asc', limit: '50' });
+    const params = new URLSearchParams({ verified_at: 'gte.' + recent, select: 'id,retailer,store_location,product_name,food_group,currency,price_minor,unit_quantity,unit_label,source_url,verified_at,expires_at', country: 'eq.' + country, food_group: 'eq.' + group, expires_at: 'gt.' + new Date().toISOString(), order: 'price_minor.asc', limit: '50' });
     const safeSearch = search.replace(/[*,().%_\\]/g, '').trim();
     const safeStore = store.replace(/[*,().%_\\]/g, '').trim();
     if (store && !safeStore) return NextResponse.json({ error: 'Enter a valid store location' }, { status: 400 });
@@ -70,9 +70,10 @@ export async function GET(request: NextRequest) {
       const row = offer as Record<string, unknown>;
       const verified = typeof row.verified_at === 'string' ? Date.parse(row.verified_at) : NaN;
       const source = typeof row.source_url === 'string' ? row.source_url : '';
+      const expiry = typeof row.expires_at === 'string' ? Date.parse(row.expires_at) : NaN;
       let validSource = false;
       try { const parsed = new URL(source); validSource = parsed.protocol === 'https:' && Boolean(parsed.hostname) && !parsed.username && !parsed.password; } catch { /* invalid source */ }
-      return validSource && Number.isFinite(verified) && verified >= now - 86400000 && verified <= now &&
+      return validSource && Number.isFinite(expiry) && expiry > now && Number.isFinite(verified) && verified >= now - 86400000 && verified <= now &&
         typeof row.price_minor === 'number' && Number.isSafeInteger(row.price_minor) && row.price_minor >= 0 &&
         row.food_group === group && row.currency === (country === 'CA' ? 'CAD' : 'USD') &&
         typeof row.unit_quantity === 'number' && Number.isFinite(row.unit_quantity) && row.unit_quantity > 0;
