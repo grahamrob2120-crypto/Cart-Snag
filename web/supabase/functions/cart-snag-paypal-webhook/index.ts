@@ -48,6 +48,7 @@ Deno.serve(async (req: Request) => {
       if (lookupError) return json({ error: "Membership lookup failed" }, 500);
       if (!membership) return json({ error: "Subscription has no linked customer" }, 409);
       let status: string | null = null;
+      let periodEnd: string | null = null;
       if (type === "BILLING.SUBSCRIPTION.CANCELLED") status = "cancelled";
       if (type === "BILLING.SUBSCRIPTION.SUSPENDED") status = "suspended";
       if (type === "BILLING.SUBSCRIPTION.EXPIRED") status = "expired";
@@ -68,11 +69,15 @@ Deno.serve(async (req: Request) => {
         const sub = await subResponse.json();
         if (sub.status !== "ACTIVE" || sub.plan_id !== membership.paypal_plan_id)
           return json({ error: "Subscription or plan mismatch" }, 409);
+        const nextBilling = sub.billing_info?.next_billing_time;
+        if (typeof nextBilling !== "string" || !Number.isFinite(Date.parse(nextBilling)) || Date.parse(nextBilling) <= Date.now())
+          return json({ error: "Subscription billing period cannot be verified" }, 409);
+        periodEnd = nextBilling;
         if (!["cancelled", "expired"].includes(membership.status)) status = "active";
       }
       if (status) {
         const { data: updated, error: changeError } = await db.from("cart_snag_subscriptions")
-          .update({ status, updated_at: new Date().toISOString() }).eq("id", membership.id)
+          .update({ status, ...(periodEnd ? { current_period_end: periodEnd } : {}), updated_at: new Date().toISOString() }).eq("id", membership.id)
           .eq("environment", mode).select("id");
         if (changeError || updated?.length !== 1) return json({ error: "Membership update not confirmed" }, 500);
       }
