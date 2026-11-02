@@ -1,7 +1,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
 const supabase = createClient('https://cymrqyxknfocewznwpcn.supabase.co','sb_publishable_DyjUfhmrSzg3nGe06OV8Rw_lwmHV4hA');
 const $ = id => document.getElementById(id);
-const groups=[['Meat & protein','🥩'],['Dairy','🧀'],['Vegetables','🥦'],['Fruits','🍓'],['Grains','🌾']];
+const groups=[['Meat','🥩'],['Dairy','🧀'],['Vegetables','🥦'],['Fruits','🍓'],['Grains','🌾']];
 let user=null, mode='login', country='CA',receiptRows=[],privateLoadVersion=0;const currentYear=new Date().getFullYear();for(let year=currentYear;year>=currentYear-5;year--){const option=document.createElement('option');option.value=String(year);option.textContent=String(year);$('receiptYear').append(option)}
 const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node};
 function msg(text,error=false){$('status').textContent=text;$('status').classList.toggle('error',error)}
