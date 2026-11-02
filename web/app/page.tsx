@@ -1,5 +1,11 @@
 import TravelCalculator from './travel-calculator';
-const groups = [{name:'Meat',emoji:'🥩'},{name:'Dairy',emoji:'🧀'},{name:'Vegetables',emoji:'🥕'},{name:'Fruits',emoji:'🍎'},{name:'Grains',emoji:'🌾'}] as const;
+const groups = [
+  {name:'Meat',photo:'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=720&q=85',detail:'Fresh cuts and family packs'},
+  {name:'Dairy',photo:'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=720&q=85',detail:'Milk, cheese and yogurt'},
+  {name:'Vegetables',photo:'https://images.unsplash.com/photo-1447175008436-054170c2e979?auto=format&fit=crop&w=720&q=85',detail:'Fresh vegetables'},
+  {name:'Fruits',photo:'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=720&q=85',detail:'Fresh seasonal fruit'},
+  {name:'Grains',photo:'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=720&q=85',detail:'Bread and pantry grains'},
+] as const;
 export default function Home() {
   return <main className="min-h-screen bg-[#020e40] text-white">
     <header className="border-b-4 border-[#e9b940] bg-gradient-to-r from-[#020c3d] via-[#092c8b] to-[#020c3d] px-5 py-4">
@@ -17,18 +23,18 @@ export default function Home() {
         <p className="mt-5 text-center text-sm font-semibold text-[#fff0bd]">Your daily grocery deals, verified by retailer and location. Live prices are not connected yet.</p>
         <div className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
           {groups.map(g=><article key={g.name} className="flex min-h-72 flex-col overflow-hidden rounded-2xl border-[3px] border-[#e8ba4c] bg-gradient-to-b from-white to-[#e9edf7] p-3 text-[#07194d] shadow-[0_8px_0_#5e400c,0_12px_18px_rgba(0,0,0,.35)]">
-            <div className="flex h-32 items-center justify-center rounded-xl bg-[radial-gradient(circle,#fff_20%,#e8eefb_100%)] text-7xl" aria-hidden="true">{g.emoji}</div>
+            <div className="relative h-40 overflow-hidden rounded-xl bg-[#dce3ef]"><img src={g.photo} alt={g.detail} loading="lazy" className="h-full w-full object-cover" /><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#07194d]/90 to-transparent px-3 pb-2 pt-8 text-xs font-bold uppercase tracking-wider text-white">Grocery category</div></div>
             <h3 className="mt-3 text-lg font-black">{g.name}</h3>
             <p className="mt-1 text-xs font-medium text-[#485477]">Verified offers in your area</p>
             <p className="mt-auto pt-5 text-base font-extrabold">Unavailable at this time</p>
-            <span className="mt-3 rounded-full border border-[#f8df7c] bg-gradient-to-b from-[#fff1a4] to-[#e8ac12] px-3 py-2 text-center text-sm font-black text-[#09194c]">Checking retailer prices</span>
+            <span className="mt-3 rounded-full border border-[#f8df7c] bg-gradient-to-b from-[#fff1a4] to-[#e8ac12] px-3 py-2 text-center text-sm font-black text-[#09194c]">Price verification pending</span>
           </article>)}
         </div>
         <p className="mt-6 text-center text-xs text-[#f1dc9b]">Prices, discounts and store logos will appear only after verified retailer data is available. No fictional deals.</p>
       </section>
       <section aria-labelledby="groups-heading" className="mt-8 rounded-2xl border-t-2 border-[#d6a02a] pt-5">
         <h2 id="groups-heading" className="text-center font-serif text-3xl font-black italic text-[#ffe28b] sm:text-4xl">Shop by Food Group</h2>
-        <ul className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-5">{groups.map(g=><li key={g.name} className="rounded-2xl border-[3px] border-[#e5ae34] bg-gradient-to-b from-[#0a3caa] to-[#04144d] p-4 text-center text-lg font-bold shadow-[0_5px_0_#60410e]"><span aria-hidden="true" className="mr-2 text-2xl">{g.emoji}</span>{g.name}</li>)}</ul>
+        <ul className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-5">{groups.map(g=><li key={g.name} className="rounded-2xl border-[3px] border-[#e5ae34] bg-gradient-to-b from-[#0a3caa] to-[#04144d] p-4 text-center text-lg font-bold shadow-[0_5px_0_#60410e]"><span className="block overflow-hidden rounded-xl"><img src={g.photo} alt="" loading="lazy" className="mb-3 h-24 w-full object-cover" /></span>{g.name}</li>)}</ul>
       </section>
       <section aria-label="Cart Snag membership" className="mt-8 rounded-2xl border-2 border-[#f5d77b] bg-gradient-to-r from-[#092a86] to-[#07194c] p-6 text-center">
         <p className="text-sm font-bold uppercase tracking-[.2em] text-[#ffe28b]">More savings. Less spending.</p>
