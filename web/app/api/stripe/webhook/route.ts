@@ -47,6 +47,8 @@ export async function POST(request: NextRequest) {
 
   // Subscription lifecycle events are authoritative for entitlement projection.
   // Checkout and invoice events can omit a subscription ID; do not retry them indefinitely.
+  if (!/^evt_[A-Za-z0-9]+$/.test(event.id)) return response('Invalid Stripe event identifier', 400);
+
   const relevant = event.type === 'customer.subscription.created' ||
     event.type === 'customer.subscription.updated' ||
     event.type === 'customer.subscription.deleted';
@@ -104,6 +106,8 @@ export async function POST(request: NextRequest) {
       const subscription: unknown = await stripe.json();
       if (!subscription || typeof subscription !== 'object') return response('Invalid subscription', 503);
       const s = subscription as Record<string, unknown>;
+      if (s.id !== subscriptionId || s.livemode !== false) return response('Stripe subscription mismatch', 503);
+      if (customerId && s.customer !== customerId) return response('Stripe customer mismatch', 503);
       const metadata = s.metadata;
       const owner = metadata && typeof metadata === 'object' &&
         'cart_snag_user_id' in metadata ? metadata.cart_snag_user_id : null;
