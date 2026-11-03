@@ -45,9 +45,11 @@ export async function POST(request: NextRequest) {
       !('type' in event) || typeof event.type !== 'string' ||
       !('livemode' in event) || event.livemode !== false) return response('Invalid sandbox event', 400);
 
-  const relevant = event.type.startsWith('customer.subscription.') ||
-    event.type.startsWith('checkout.session.') ||
-    event.type.startsWith('invoice.');
+  // Subscription lifecycle events are authoritative for entitlement projection.
+  // Checkout and invoice events can omit a subscription ID; do not retry them indefinitely.
+  const relevant = event.type === 'customer.subscription.created' ||
+    event.type === 'customer.subscription.updated' ||
+    event.type === 'customer.subscription.deleted';
   if (!relevant) return NextResponse.json({ received: true }, { headers: { 'Cache-Control': 'no-store' } });
 
   const dbOrigin = process.env.SUPABASE_URL;
