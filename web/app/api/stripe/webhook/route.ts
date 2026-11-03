@@ -45,11 +45,49 @@ export async function POST(request: NextRequest) {
       !('type' in event) || typeof event.type !== 'string' ||
       !('livemode' in event) || event.livemode !== false) return response('Invalid sandbox event', 400);
 
-  // Never acknowledge subscription events before durable idempotent persistence is implemented.
-  // Returning 503 makes Stripe retry delivery; no paid access is granted.
-  if (event.type.startsWith('customer.subscription.') ||
-      event.type.startsWith('checkout.session.') ||
-      event.type.startsWith('invoice.')) return response('Membership synchronization not configured', 503);
+  const relevant = event.type.startsWith('customer.subscription.') ||
+    event.type.startsWith('checkout.session.') ||
+    event.type.startsWith('invoice.');
+  if (!relevant) return NextResponse.json({ received: true }, { headers: { 'Cache-Control': 'no-store' } });
 
-  return NextResponse.json({ received: true }, { headers: { 'Cache-Control': 'no-store' } });
+  const dbOrigin = process.env.SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!dbOrigin || !serviceKey) return response('Event persistence unavailable', 503);
+
+  const data = 'data' in event && event.data && typeof event.data === 'object' &&
+    'object' in event.data && event.data.object && typeof event.data.object === 'object'
+    ? event.data.object : null;
+  const objectId = data && 'id' in data && typeof data.id === 'string' ? data.id : null;
+  const subscriptionId = data && 'subscription' in data && typeof data.subscription === 'string'
+    ? data.subscription : event.type.startsWith('customer.subscription.') ? objectId : null;
+  const customerId = data && 'customer' in data && typeof data.customer === 'string' ? data.customer : null;
+  try {
+    const endpoint = new URL('/rest/v1/cart_snag_stripe_events?on_conflict=id', dbOrigin);
+    const saved = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        apikey: serviceKey,
+        Authorization: 'Bearer ' + serviceKey,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=ignore-duplicates,return=minimal',
+      },
+      body: JSON.stringify({
+        id: event.id,
+        event_type: event.type,
+        stripe_subscription_id: subscriptionId,
+        stripe_customer_id: customerId,
+        livemode: false,
+        payload: event,
+      }),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!saved.ok) return response('Event persistence failed', 503);
+  } catch {
+    return response('Event persistence unavailable', 503);
+  }
+
+  // Durable event journal is in place, but membership projection is not.
+  // Stripe must retry these events until the entitlement processor is deployed.
+  return response('Membership processing pending', 503);
 }
