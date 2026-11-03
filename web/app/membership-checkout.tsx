@@ -28,7 +28,7 @@ export default function MembershipCheckout() {
     return () => { active = false; unsubscribe?.(); };
   }, []);
   async function authenticate(mode: 'signin' | 'signup') {
-    if (!email.trim() || !password || password.length < 6) { setMessage('Enter a valid email and password of at least six characters.'); return; }
+    if (!email.trim() || !password || (mode === 'signup' && password.length < 8)) { setMessage(mode === 'signup' ? 'Enter a valid email and password of at least eight characters.' : 'Enter your email and password.'); return; }
     if (!config || busy) return;
     setBusy(true); setMessage('');
     try {
@@ -92,7 +92,7 @@ export default function MembershipCheckout() {
       <label className="text-sm" htmlFor="membership-email">Email</label>
       <input id="membership-email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} className="rounded-lg bg-white p-3 text-[#07194c]" />
       <label className="text-sm" htmlFor="membership-password">Password</label>
-      <input id="membership-password" type="password" minLength={6} autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} className="rounded-lg bg-white p-3 text-[#07194c]" />
+      <input id="membership-password" type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} className="rounded-lg bg-white p-3 text-[#07194c]" />
       <div className="flex flex-wrap gap-3"><button type="submit" disabled={!config || busy} className="rounded-full bg-[#ffe28b] px-5 py-3 font-bold text-[#07194c] disabled:opacity-50">Sign in</button><button type="button" disabled={!config || busy} onClick={() => void authenticate('signup')} className="rounded-full border border-[#ffe28b] px-5 py-3 font-bold disabled:opacity-50">Create account</button></div>
       <button type="button" disabled={!config || busy} onClick={() => void resetPassword()} className="text-left text-sm underline disabled:opacity-50">Forgot password?</button>
     </form>}
