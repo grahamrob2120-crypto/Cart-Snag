@@ -97,17 +97,26 @@ export async function POST(request: NextRequest) {
     const stripeKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeKey?.startsWith('sk_test_')) return response('Stripe verification unavailable', 503);
     try {
-      const stripe = await fetch('https://api.stripe.com/v1/subscriptions/' + subscriptionId, {
-        headers: { Authorization: 'Bearer ' + stripeKey },
-        cache: 'no-store',
-        signal: AbortSignal.timeout(10000),
-      });
-      if (!stripe.ok) return response('Subscription verification failed', 503);
-      const subscription: unknown = await stripe.json();
+      // Stripe can return 404 after deletion. Its signed deletion snapshot is
+      // sufficient to revoke access, but never to grant access.
+      const deleted = event.type === 'customer.subscription.deleted';
+      let subscription: unknown;
+      if (deleted) {
+        subscription = data;
+      } else {
+        const stripe = await fetch('https://api.stripe.com/v1/subscriptions/' + subscriptionId, {
+          headers: { Authorization: 'Bearer ' + stripeKey },
+          cache: 'no-store',
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!stripe.ok) return response('Subscription verification failed', 503);
+        subscription = await stripe.json();
+      }
       if (!subscription || typeof subscription !== 'object') return response('Invalid subscription', 503);
       const s = subscription as Record<string, unknown>;
       if (s.id !== subscriptionId || s.livemode !== false) return response('Stripe subscription mismatch', 503);
       if (customerId && s.customer !== customerId) return response('Stripe customer mismatch', 503);
+      if (deleted && s.status !== 'canceled') return response('Invalid cancellation snapshot', 503);
       const metadata = s.metadata;
       const owner = metadata && typeof metadata === 'object' &&
         'cart_snag_user_id' in metadata ? metadata.cart_snag_user_id : null;
