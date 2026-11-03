@@ -42,6 +42,35 @@ export async function POST(request: NextRequest) {
     return fail('Invalid request', 400);
   }
 
+  // Avoid initiating another subscription while this customer already has one.
+  try {
+    const endpoint = new URL('/rest/v1/cart_snag_stripe_subscriptions', supabaseUrl);
+    endpoint.searchParams.set('select', 'status,current_period_end');
+    endpoint.searchParams.set('user_id', 'eq.' + userId);
+    endpoint.searchParams.set('limit', '100');
+    const existing = await fetch(endpoint, {
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: 'Bearer ' + process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!existing.ok) return fail('Unable to verify existing subscriptions', 503);
+    const subscriptions: unknown = await existing.json();
+    if (!Array.isArray(subscriptions)) return fail('Invalid subscription response', 503);
+    const hasMembership = subscriptions.some((item: unknown) => {
+      if (!item || typeof item !== 'object' || !('status' in item) || !('current_period_end' in item)) return false;
+      const expires = item.current_period_end;
+      return (item.status === 'active' || item.status === 'trialing') &&
+        typeof expires === 'string' && Number.isFinite(Date.parse(expires)) &&
+        Date.parse(expires) > Date.now();
+    });
+    if (hasMembership) return fail('An active membership already exists', 409);
+  } catch {
+    return fail('Unable to verify existing subscriptions', 503);
+  }
+
   const price = plan === 'monthly' ? process.env.STRIPE_PRICE_MONTHLY_CAD : process.env.STRIPE_PRICE_ANNUAL_CAD;
   const origin = process.env.PUBLIC_APP_ORIGIN;
   if (!price || !/^price_[a-zA-Z0-9]+$/.test(price) || !origin) return fail('Price or return URL is not configured', 503);
