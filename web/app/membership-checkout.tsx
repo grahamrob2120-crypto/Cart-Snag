@@ -84,6 +84,28 @@ export default function MembershipCheckout() {
       window.location.assign(target.href);
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Checkout unavailable'); setBusy(false); }
   }
+  async function manageBilling() {
+    if (!session || busy) return;
+    setBusy(true); setMessage('');
+    try {
+      const {client} = await getAuthClient();
+      const {data, error} = await client.auth.getSession();
+      if (error || !data.session) throw Error('Sign in to manage billing');
+      const response = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + data.session.access_token },
+        cache: 'no-store',
+      });
+      const result: {url?: string; error?: string} = await response.json();
+      if (!response.ok || !result.url) throw Error(result.error || 'Billing management unavailable');
+      const target = new URL(result.url);
+      if (target.protocol !== 'https:' || target.hostname !== 'billing.stripe.com') throw Error('Invalid billing destination');
+      window.location.assign(target.href);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Billing management unavailable');
+      setBusy(false);
+    }
+  }
   return <div className="mx-auto mt-5 max-w-xl rounded-2xl border border-[#f5d77b] bg-[#041950] p-5 text-left">
     <label className="block text-sm font-bold text-[#ffe28b]" htmlFor="membership-country">Membership country</label>
     <select id="membership-country" className="mt-2 w-full rounded-lg bg-white p-3 text-[#07194c]" value={country} onChange={e => setCountry(e.target.value as Country)}>
@@ -100,6 +122,7 @@ export default function MembershipCheckout() {
       <button type="button" disabled={!config || busy} onClick={() => void resetPassword()} className="text-left text-sm underline disabled:opacity-50">Forgot password?</button>
     </form>}
     {session && <button type="button" disabled={busy} onClick={() => void signOut()} className="mt-3 text-sm underline">Sign out</button>}
+    {session && <button type="button" disabled={busy} onClick={() => void manageBilling()} className="mt-3 ml-4 text-sm underline disabled:opacity-50">Manage subscription or cancel</button>}
     <button type="button" disabled={!session || !config?.checkoutEnabled || busy || country !== 'CA'} onClick={() => void checkout()} className="mt-5 block w-full rounded-full bg-gradient-to-b from-[#fff1a4] to-[#d89d10] px-8 py-3 font-black text-[#07194c] disabled:cursor-not-allowed disabled:opacity-60">{busy ? 'Working…' : config?.checkoutEnabled ? 'Continue to Stripe' : 'Stripe checkout — activation pending'}</button>
     <p role="status" aria-live="polite" className="mt-3 text-sm text-[#ffe28b]">{message || (!config?.checkoutEnabled ? 'Payments are disabled until secure billing verification is complete. No payment will be collected.' : 'Stripe will confirm your recurring subscription charge before approval.')}</p>
   </div>;
