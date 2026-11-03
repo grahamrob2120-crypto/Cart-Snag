@@ -123,6 +123,15 @@ export async function POST(request: NextRequest) {
         ? firstItem.price : null;
       const priceId = price && typeof price === 'object' && 'id' in price &&
         typeof price.id === 'string' ? price.id : null;
+      // Restrict entitlement grants to the configured Canadian recurring prices.
+      const priceCurrency = price && typeof price === 'object' && 'currency' in price ? price.currency : null;
+      const priceRecurring = price && typeof price === 'object' && 'recurring' in price ? price.recurring : null;
+      if (priceCurrency !== 'cad' || !priceRecurring || typeof priceRecurring !== 'object')
+        return response('Unsupported subscription price', 503);
+      const expectedInterval = priceId === process.env.STRIPE_PRICE_MONTHLY_CAD ? 'month' :
+        priceId === process.env.STRIPE_PRICE_ANNUAL_CAD ? 'year' : null;
+      if (!expectedInterval || !('interval' in priceRecurring) ||
+        priceRecurring.interval !== expectedInterval) return response('Unexpected billing interval', 503);
       const periodEnd = firstItem && typeof firstItem === 'object' &&
         'current_period_end' in firstItem ? firstItem.current_period_end : null;
       const expires = typeof periodEnd === 'number' && Number.isSafeInteger(periodEnd) && periodEnd > 0 && periodEnd < 8640000000000
