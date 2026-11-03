@@ -42,7 +42,7 @@ async function loadOffers(){
  const cutoff=new Date(Date.now()-24*60*60*1000).toISOString();
  const {data,error}=await supabase.from('cart_snag_offers')
   .select('retailer,store_location,product_name,food_group,currency,price_minor,unit_quantity,unit_label,verified_at,expires_at,availability,source_url')
-  .eq('country',selectedCountry).eq('availability','available').gte('verified_at',cutoff)
+  .eq('country',selectedCountry).eq('availability','verified').gte('verified_at',cutoff)
   .order('verified_at',{ascending:false}).limit(30);
  if(version!==offerLoadVersion||selectedCountry!==country)return;
  target.replaceChildren();
