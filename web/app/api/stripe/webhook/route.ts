@@ -130,6 +130,12 @@ export async function POST(request: NextRequest) {
       const firstItem = Array.isArray(itemData) ? itemData[0] : null;
       const price = firstItem && typeof firstItem === 'object' && 'price' in firstItem
         ? firstItem.price : null;
+      // A Stripe subscription may have multiple items. Refuse ambiguous
+      // memberships rather than granting access for an unverified add-on.
+      if (!Array.isArray(itemData) || itemData.length !== 1)
+        return response('Unsupported subscription items', 503);
+      if (!firstItem || typeof firstItem !== 'object' || !('quantity' in firstItem) ||
+        firstItem.quantity !== 1) return response('Unsupported subscription quantity', 503);
       const priceId = price && typeof price === 'object' && 'id' in price &&
         typeof price.id === 'string' ? price.id : null;
       // Restrict entitlement grants to the configured Canadian recurring prices.
