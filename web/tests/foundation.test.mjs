@@ -13,7 +13,7 @@ test('paid grocery offers require server-side identity and active membership', (
  const source = read('../app/api/offers/route.ts');
  assert.match(source, /\/auth\/v1\/user/);
  assert.match(source, /cart_snag_stripe_subscriptions/);
- assert.match(source, /status', 'eq\.active'/);
+ assert.match(source, /status', 'in\.\(active,trialing\)'/);
  assert.match(source, /Active membership required/);
  assert.match(source, /status: 403/);
 });
