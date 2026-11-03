@@ -87,7 +87,83 @@ export async function POST(request: NextRequest) {
     return response('Event persistence unavailable', 503);
   }
 
-  // Durable event journal is in place, but membership projection is not.
-  // Stripe must retry these events until the entitlement processor is deployed.
-  return response('Membership processing pending', 503);
+  // Refresh the subscription from Stripe rather than trusting out-of-order webhook payloads.
+  if (subscriptionId && /^sub_[A-Za-z0-9]+$/.test(subscriptionId)) {
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeKey?.startsWith('sk_test_')) return response('Stripe verification unavailable', 503);
+    try {
+      const stripe = await fetch('https://api.stripe.com/v1/subscriptions/' + subscriptionId, {
+        headers: { Authorization: 'Bearer ' + stripeKey },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!stripe.ok) return response('Subscription verification failed', 503);
+      const subscription: unknown = await stripe.json();
+      if (!subscription || typeof subscription !== 'object') return response('Invalid subscription', 503);
+      const s = subscription as Record<string, unknown>;
+      const metadata = s.metadata;
+      const owner = metadata && typeof metadata === 'object' &&
+        'cart_snag_user_id' in metadata ? metadata.cart_snag_user_id : null;
+      const customer = s.customer;
+      const status = s.status;
+      if (typeof owner !== 'string' || !/^[0-9a-f-]{36}$/i.test(owner) ||
+        typeof customer !== 'string' || !/^cus_[A-Za-z0-9]+$/.test(customer) ||
+        typeof status !== 'string') return response('Unlinked subscription', 503);
+      const itemData = s.items && typeof s.items === 'object' && 'data' in s.items
+        ? s.items.data : null;
+      const firstItem = Array.isArray(itemData) ? itemData[0] : null;
+      const price = firstItem && typeof firstItem === 'object' && 'price' in firstItem
+        ? firstItem.price : null;
+      const priceId = price && typeof price === 'object' && 'id' in price &&
+        typeof price.id === 'string' ? price.id : null;
+      const periodEnd = firstItem && typeof firstItem === 'object' &&
+        'current_period_end' in firstItem ? firstItem.current_period_end : null;
+      const expires = typeof periodEnd === 'number' && Number.isSafeInteger(periodEnd)
+        ? new Date(periodEnd * 1000).toISOString() : null;
+      if (!priceId || ![process.env.STRIPE_PRICE_MONTHLY_CAD, process.env.STRIPE_PRICE_ANNUAL_CAD].includes(priceId))
+        return response('Unknown subscription price', 503);
+      const endpoint = new URL('/rest/v1/cart_snag_stripe_subscriptions?on_conflict=stripe_subscription_id', dbOrigin);
+      const saved = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          apikey: serviceKey,
+          Authorization: 'Bearer ' + serviceKey,
+          'Content-Type': 'application/json',
+          Prefer: 'resolution=merge-duplicates,return=minimal',
+        },
+        body: JSON.stringify({
+          stripe_subscription_id: subscriptionId,
+          stripe_customer_id: customer,
+          user_id: owner,
+          status,
+          price_id: priceId,
+          current_period_end: expires,
+          cancel_at_period_end: s.cancel_at_period_end === true,
+          updated_at: new Date().toISOString(),
+        }),
+        cache: 'no-store',
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!saved.ok) return response('Subscription synchronization failed', 503);
+    } catch {
+      return response('Subscription synchronization unavailable', 503);
+    }
+  }
+
+  const eventEndpoint = new URL('/rest/v1/cart_snag_stripe_events', dbOrigin);
+  eventEndpoint.searchParams.set('id', 'eq.' + event.id);
+  const processed = await fetch(eventEndpoint, {
+    method: 'PATCH',
+    headers: {
+      apikey: serviceKey,
+      Authorization: 'Bearer ' + serviceKey,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ processed_at: new Date().toISOString(), processing_error: null }),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(10000),
+  }).catch(() => null);
+  if (!processed?.ok) return response('Event processing incomplete', 503);
+  return NextResponse.json({ received: true }, { headers: { 'Cache-Control': 'no-store' } });
 }
