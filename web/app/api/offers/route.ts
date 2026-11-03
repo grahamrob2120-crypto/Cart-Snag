@@ -22,11 +22,11 @@ export async function GET(request: NextRequest) {
         typeof user.id !== 'string' || !/^[0-9a-f-]{36}$/i.test(user.id))
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
     userId = user.id;
-    const membershipUrl = new URL('/rest/v1/cart_snag_subscriptions', url);
+    const membershipUrl = new URL('/rest/v1/cart_snag_stripe_subscriptions', url);
     membershipUrl.searchParams.set('select', 'status,current_period_end');
     membershipUrl.searchParams.set('user_id', 'eq.' + userId);
-    membershipUrl.searchParams.set('status', 'eq.active');
-    membershipUrl.searchParams.set('limit', '1');
+    membershipUrl.searchParams.set('status', 'in.(active,trialing)');
+    membershipUrl.searchParams.set('limit', '100');
     const membership = await fetch(membershipUrl, {
       headers: { apikey: serviceKey, authorization: 'Bearer ' + serviceKey },
       cache: 'no-store', signal: AbortSignal.timeout(10000),
@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
     const records: unknown = await membership.json();
     if (!Array.isArray(records)) return NextResponse.json({ error: 'Membership verification unavailable' }, { status: 503 });
     const entitled = records.some((record: unknown) => {
-      if (!('status' in (record as object)) || (record as { status?: unknown }).status !== 'active') return false;
-      if (!record || typeof record !== 'object' || !('current_period_end' in record)) return false;
+      if (!record || typeof record !== 'object' || !('current_period_end' in record) || !('status' in record)) return false;
+      if (record.status !== 'active' && record.status !== 'trialing') return false;
       const end = record.current_period_end;
       return typeof end === 'string' && Number.isFinite(Date.parse(end)) && Date.parse(end) > Date.now();
     });
