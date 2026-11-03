@@ -11,7 +11,7 @@ export default function VerifiedOffers() {
  const [sort,setSort]=useState<'price'|'recent'>('price');
  const [token,setToken]=useState('');
  const [shoppingList,setShoppingList]=useState<Offer[]>([]);
- useEffect(() => { try { const raw=window.localStorage.getItem('cart-snag-shopping-list'); const data=raw?JSON.parse(raw):[]; if(Array.isArray(data))setShoppingList(data.filter((x:unknown)=>!!x&&typeof x==='object'&&'id' in x&&'price_minor' in x).slice(0,100)); } catch { setShoppingList([]); } },[]);
+ useEffect(() => { try { const raw=window.localStorage.getItem('cart-snag-shopping-list'); const data=raw?JSON.parse(raw):[]; if(Array.isArray(data))setShoppingList(data.filter((x:unknown):x is Offer=>!!x&&typeof x==='object'&&'id' in x&&typeof x.id==='number'&&'price_minor' in x&&typeof x.price_minor==='number'&&'product_name' in x&&typeof x.product_name==='string'&&'currency' in x&&typeof x.currency==='string'&&'retailer' in x&&typeof x.retailer==='string').slice(0,100)); } catch { setShoppingList([]); } },[]);
  function saveList(next:Offer[]){setShoppingList(next);try{window.localStorage.setItem('cart-snag-shopping-list',JSON.stringify(next));}catch{setMessage('Shopping list could not be saved on this device.');}}
  function addItem(offer:Offer){if(shoppingList.some(x=>x.id===offer.id))return;saveList([...shoppingList,offer].slice(0,100));}
  function removeItem(id:number){saveList(shoppingList.filter(x=>x.id!==id));}
