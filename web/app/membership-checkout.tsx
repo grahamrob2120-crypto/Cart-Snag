@@ -7,6 +7,7 @@ type Config = { url: string; anonKey: string; checkoutEnabled: boolean };
 type Session = { access_token: string };
 export default function MembershipCheckout() {
   const [country, setCountry] = useState<Country>('CA');
+  const [plan, setPlan] = useState<'monthly' | 'annual'>('monthly');
   const [config, setConfig] = useState<Config | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -71,23 +72,25 @@ export default function MembershipCheckout() {
       const {client} = await getAuthClient();
       const {data, error} = await client.auth.getSession();
       if (error || !data.session) throw Error('Sign in before subscribing');
-      const response = await fetch('/api/paypal/subscriptions', {
+      const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + data.session.access_token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ country }),
+        body: JSON.stringify({ country, plan }),
       });
-      const result: { approveUrl?: string; error?: string } = await response.json();
-      if (!response.ok || !result.approveUrl) throw Error(result.error || 'Checkout unavailable');
-      const target = new URL(result.approveUrl);
-      if (target.protocol !== 'https:' || !(target.hostname === 'paypal.com' || target.hostname.endsWith('.paypal.com'))) throw Error('Invalid checkout destination');
+      const result: { url?: string; error?: string } = await response.json();
+      if (!response.ok || !result.url) throw Error(result.error || 'Checkout unavailable');
+      const target = new URL(result.url);
+      if (target.protocol !== 'https:' || !(target.hostname === 'checkout.stripe.com')) throw Error('Invalid checkout destination');
       window.location.assign(target.href);
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Checkout unavailable'); setBusy(false); }
   }
   return <div className="mx-auto mt-5 max-w-xl rounded-2xl border border-[#f5d77b] bg-[#041950] p-5 text-left">
     <label className="block text-sm font-bold text-[#ffe28b]" htmlFor="membership-country">Membership country</label>
     <select id="membership-country" className="mt-2 w-full rounded-lg bg-white p-3 text-[#07194c]" value={country} onChange={e => setCountry(e.target.value as Country)}>
-      <option value="CA">Canada — $0.99 CAD/month</option><option value="US">United States — $1.19 USD/month</option>
+      <option value="CA">Canada (CAD)</option><option value="US">United States (USD — coming soon)</option>
     </select>
+    <label htmlFor="membership-plan" className="mt-3 block text-sm font-bold">Billing plan</label>
+    <select id="membership-plan" value={plan} onChange={e => setPlan(e.target.value as 'monthly' | 'annual')} className="mt-2 w-full rounded-lg bg-white p-3 text-[#07194c]"><option value="monthly">$0.99 CAD/month</option><option value="annual">$10.99 CAD/year</option></select>
     {!session && <form className="mt-4 grid gap-3" onSubmit={e => { e.preventDefault(); void authenticate('signin'); }}>
       <label className="text-sm" htmlFor="membership-email">Email</label>
       <input id="membership-email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} className="rounded-lg bg-white p-3 text-[#07194c]" />
@@ -97,7 +100,7 @@ export default function MembershipCheckout() {
       <button type="button" disabled={!config || busy} onClick={() => void resetPassword()} className="text-left text-sm underline disabled:opacity-50">Forgot password?</button>
     </form>}
     {session && <button type="button" disabled={busy} onClick={() => void signOut()} className="mt-3 text-sm underline">Sign out</button>}
-    <button type="button" disabled={!session || !config?.checkoutEnabled || busy} onClick={() => void checkout()} className="mt-5 block w-full rounded-full bg-gradient-to-b from-[#fff1a4] to-[#d89d10] px-8 py-3 font-black text-[#07194c] disabled:cursor-not-allowed disabled:opacity-60">{busy ? 'Working…' : config?.checkoutEnabled ? 'Continue to PayPal' : 'PayPal checkout — activation pending'}</button>
-    <p role="status" aria-live="polite" className="mt-3 text-sm text-[#ffe28b]">{message || (!config?.checkoutEnabled ? 'Payments are disabled until secure billing verification is complete. No payment will be collected.' : 'PayPal will confirm your recurring monthly charge before approval.')}</p>
+    <button type="button" disabled={!session || !config?.checkoutEnabled || busy || country !== 'CA'} onClick={() => void checkout()} className="mt-5 block w-full rounded-full bg-gradient-to-b from-[#fff1a4] to-[#d89d10] px-8 py-3 font-black text-[#07194c] disabled:cursor-not-allowed disabled:opacity-60">{busy ? 'Working…' : config?.checkoutEnabled ? 'Continue to Stripe' : 'Stripe checkout — activation pending'}</button>
+    <p role="status" aria-live="polite" className="mt-3 text-sm text-[#ffe28b]">{message || (!config?.checkoutEnabled ? 'Payments are disabled until secure billing verification is complete. No payment will be collected.' : 'Stripe will confirm your recurring subscription charge before approval.')}</p>
   </div>;
 }
