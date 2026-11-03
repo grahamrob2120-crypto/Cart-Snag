@@ -51,13 +51,13 @@ async function loadOffers(){
  const offers=(data||[]).filter(o=>allowed.has(String(o.food_group||'').toLowerCase())
   &&o.currency===(selectedCountry==='CA'?'CAD':'USD')
   &&Number.isInteger(o.price_minor)&&o.price_minor>=0
-  &&(!o.expires_at||Date.parse(o.expires_at)>Date.now()));
- if(!offers.length){target.append(el('p','muted','Unavailable at this time — no recently verified local prices. Please check again later.'));return;}
+  &&(!o.expires_at||Date.parse(o.expires_at)>Date.now()) && Number.isFinite(Date.parse(o.verified_at)));
+ if(!offers.length){target.append(el('p','muted','Unavailable at this time — no recently verified prices for this country. Please check again later.'));return;}
  for(const offer of offers){
   const card=el('article','card deal');
   card.append(el('h3','',offer.product_name),el('p','muted',offer.retailer+' · '+offer.store_location));
   const price=el('div','price',new Intl.NumberFormat(selectedCountry==='CA'?'en-CA':'en-US',{style:'currency',currency:offer.currency}).format(offer.price_minor/100));
-  card.append(price,el('p','fine','Verified '+new Date(offer.verified_at).toLocaleString()));
+  card.append(price,el('p','fine','Verified '+new Date(offer.verified_at).toLocaleString()));if(Number(offer.unit_quantity)>0&&offer.unit_label){card.append(el('p','fine',new Intl.NumberFormat(selectedCountry==='CA'?'en-CA':'en-US',{style:'currency',currency:offer.currency}).format((offer.price_minor/100)/Number(offer.unit_quantity))+' per '+offer.unit_label));}
   if(offer.source_url&&/^https:\/\//i.test(offer.source_url)){const a=el('a','','View retailer source');a.href=offer.source_url;a.target='_blank';a.rel='noopener noreferrer';card.append(a);}
   target.append(card);
  }
