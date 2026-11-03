@@ -4,7 +4,7 @@ Owner: G SOFTWARE DEVELOPMENTS. This branch is isolated from the existing GitHub
 
 ## Tests before implementation (TDD)
 1. **Identity:** unregistered, unverified, unpaid, expired, and revoked accounts cannot access paid deal APIs. Verify authorization on the server, not merely in the UI. Test cross-user access and RLS.
-2. **Billing:** PayPal subscription activation requires a verified server-side webhook and an independently verified subscription state; duplicate, delayed, reordered, forged and replayed webhooks must not grant access. $5.99/year, CAD/USD pricing policy must be explicitly configured.
+2. **Billing:** Stripe subscription activation requires a verified server-side webhook and an independently verified subscription state; duplicate, delayed, reordered, forged and replayed webhooks must not grant access. $10.99/year, CAD/USD pricing policy must be explicitly configured.
 3. **Catalog:** reject anything outside meat, dairy, vegetables, fruits and grains, including spices, condiments and nonfood products, at ingestion and querying. Test product equivalence, unit normalization, pack sizes and currency boundaries.
 4. **Pricing:** store source URL, retailer location, observed timestamp, validation status, units and confidence. Scheduled checks must run hourly on the hour; unavailable/blocked retailer data is marked stale, never fabricated. Respect site access restrictions.
 5. **Deals:** only compare matching locations, currencies, equivalent products and current validated observations; account for travel costs without silently changing the displayed shelf price.
@@ -18,7 +18,7 @@ Owner: G SOFTWARE DEVELOPMENTS. This branch is isolated from the existing GitHub
 ## Build sequence
 - Establish Next.js App Router + TypeScript + Tailwind in a separate app directory, with tests and CI.
 - Implement database migrations and server-side membership authorization before exposing paid data.
-- Integrate PayPal with idempotent webhooks and reconciliation.
+- Integrate Stripe with idempotent webhooks and reconciliation.
 - Implement compliant retailer connectors and validated price pipeline.
 - Add shopping, Portion Machine, receipts, coupons, challenges and alerts.
 - Package and test native mobile clients; conduct security and release reviews.
