@@ -2,7 +2,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const supabase = createClient('https://cymrqyxknfocewznwpcn.supabase.co','sb_publishable_DyjUfhmrSzg3nGe06OV8Rw_lwmHV4hA');
 const $ = id => document.getElementById(id);
 const groups=[['Meat','🥩'],['Dairy','🧀'],['Vegetables','🥦'],['Fruits','🍓'],['Grains','🌾']];
-let user=null, mode='login', country='CA',receiptRows=[],privateLoadVersion=0;const currentYear=new Date().getFullYear();for(let year=currentYear;year>=currentYear-5;year--){const option=document.createElement('option');option.value=String(year);option.textContent=String(year);$('receiptYear').append(option)}
+let user=null, mode='login', country='CA',receiptRows=[],privateLoadVersion=0,offerLoadVersion=0;const currentYear=new Date().getFullYear();for(let year=currentYear;year>=currentYear-5;year--){const option=document.createElement('option');option.value=String(year);option.textContent=String(year);$('receiptYear').append(option)}
 const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node};
 function msg(text,error=false){$('status').textContent=text;$('status').classList.toggle('error',error)}
 function money(value){return new Intl.NumberFormat(country==='CA'?'en-CA':'en-US',{style:'currency',currency:country==='CA'?'CAD':'USD'}).format(Number(value)||0)}
@@ -30,11 +30,38 @@ $('authForm').addEventListener('submit',async e=>{e.preventDefault();const email
 $('resetPassword').addEventListener('click',async()=>{const email=$('email').value.trim();if(!email){msg('Enter your email address first.',true);return}const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});msg(error?error.message:'If an account exists, a password reset email will be sent.',!!error)});
 supabase.auth.onAuthStateChange((event)=>{if(event==='PASSWORD_RECOVERY'){const password=prompt('Enter a new password (at least 8 characters)');if(password&&password.length>=8)supabase.auth.updateUser({password}).then(({error})=>msg(error?error.message:'Password updated.',!!error));else if(password)msg('Password must be at least 8 characters.',true)}});
 $('signOut').addEventListener('click',async()=>{const {error}=await supabase.auth.signOut();if(error){msg(error.message,true);return}user=null;updateAuthUI();msg('Signed out.')});
-$('country').addEventListener('change',()=>{country=$('country').value;if(user)loadPrivate();else privateLoadVersion++;msg(country==='CA'?'Showing Canadian records in CAD.':'Showing US records in USD.')});
+$('country').addEventListener('change',()=>{country=$('country').value;if(user)loadPrivate();else privateLoadVersion++;loadOffers();msg(country==='CA'?'Showing Canadian records in CAD.':'Showing US records in USD.')});
 $('searchButton').addEventListener('click',()=>openFlyers());$('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')openFlyers()});
 $('receiptForm').addEventListener('submit',async e=>{e.preventDefault();if(!user){showAuth();return}const store=$('store').value.trim(),total=Number($('total').value),savings=Number($('savings').value),purchased_at=$('purchaseDate').value;if(!store||!purchased_at||!Number.isFinite(total)||total<0||!Number.isFinite(savings)||savings<0){msg('Check the receipt fields.',true);return}
  const submit=$('receiptForm').querySelector('button[type=submit]');submit.disabled=true;let image_path=null;const file=$('receiptImage').files[0];if(file){if(file.size>5242880||!['image/jpeg','image/png','image/webp'].includes(file.type)){msg('Receipt image must be JPG, PNG or WebP under 5 MB.',true);submit.disabled=false;return}const ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];image_path=user.id+'/'+crypto.randomUUID()+'.'+ext;const uploaded=await supabase.storage.from('receipt-images').upload(image_path,file,{contentType:file.type,upsert:false});if(uploaded.error){msg(uploaded.error.message,true);submit.disabled=false;return}}const {error}=await supabase.from('receipts').insert({user_id:user.id,store_name:store,total,savings,purchased_at,country_code:country,image_path});submit.disabled=false;if(error){if(image_path)await supabase.storage.from('receipt-images').remove([image_path]);msg(error.message,true)}else{$('receiptForm').reset();$('purchaseDate').value=new Date().toLocaleDateString('en-CA');$('savings').value='0';msg('Receipt saved to your private account.');loadReceipts()}});
 $('watchForm').addEventListener('submit',async e=>{e.preventDefault();if(!user){showAuth();return}const term=$('watchTerm').value.trim().toLowerCase();if(term.length<2)return;const {error}=await supabase.from('saved_searches').insert({user_id:user.id,term,country_code:country});if(error)msg(error.code==='23505'?'That item is already on your list.':error.message,error.code!=='23505');else{$('watchTerm').value='';msg('Item saved to your watchlist.');loadWatches()}});
-$('year').textContent=String(new Date().getFullYear());$('purchaseDate').value=new Date().toLocaleDateString('en-CA');renderGroups();updateMode('login');
+async function loadOffers(){
+ const version=++offerLoadVersion, selectedCountry=country, target=$('verifiedOffers');
+ if(!target)return;
+ target.replaceChildren(el('p','muted','Checking verified grocery prices…'));
+ const cutoff=new Date(Date.now()-24*60*60*1000).toISOString();
+ const {data,error}=await supabase.from('cart_snag_offers')
+  .select('retailer,store_location,product_name,food_group,currency,price_minor,unit_quantity,unit_label,verified_at,expires_at,availability,source_url')
+  .eq('country',selectedCountry).eq('availability','available').gte('verified_at',cutoff)
+  .order('verified_at',{ascending:false}).limit(30);
+ if(version!==offerLoadVersion||selectedCountry!==country)return;
+ target.replaceChildren();
+ if(error){target.append(el('p','muted','Verified prices are unavailable at this time.'));return;}
+ const allowed=new Set(['meat','dairy','vegetables','fruits','grains']);
+ const offers=(data||[]).filter(o=>allowed.has(String(o.food_group||'').toLowerCase())
+  &&o.currency===(selectedCountry==='CA'?'CAD':'USD')
+  &&Number.isInteger(o.price_minor)&&o.price_minor>=0
+  &&(!o.expires_at||Date.parse(o.expires_at)>Date.now()));
+ if(!offers.length){target.append(el('p','muted','Unavailable at this time — no recently verified local prices. Please check again later.'));return;}
+ for(const offer of offers){
+  const card=el('article','card deal');
+  card.append(el('h3','',offer.product_name),el('p','muted',offer.retailer+' · '+offer.store_location));
+  const price=el('div','price',new Intl.NumberFormat(selectedCountry==='CA'?'en-CA':'en-US',{style:'currency',currency:offer.currency}).format(offer.price_minor/100));
+  card.append(price,el('p','fine','Verified '+new Date(offer.verified_at).toLocaleString()));
+  if(offer.source_url&&/^https:\/\//i.test(offer.source_url)){const a=el('a','','View retailer source');a.href=offer.source_url;a.target='_blank';a.rel='noopener noreferrer';card.append(a);}
+  target.append(card);
+ }
+}
+$('year').textContent=String(new Date().getFullYear());loadOffers();$('purchaseDate').value=new Date().toLocaleDateString('en-CA');renderGroups();updateMode('login');
 supabase.auth.onAuthStateChange((_event,session)=>{const next=session?.user||null;if(user?.id===next?.id)return;user=next;queueMicrotask(updateAuthUI)});
 const {data:{user:currentUser},error:initError}=await supabase.auth.getUser();if(initError&&initError.name!=='AuthSessionMissingError')msg(initError.message,true);user=currentUser||null;updateAuthUI();
