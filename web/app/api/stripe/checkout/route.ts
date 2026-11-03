@@ -62,11 +62,15 @@ export async function POST(request: NextRequest) {
     const hasMembership = subscriptions.some((item: unknown) => {
       if (!item || typeof item !== 'object' || !('status' in item) || !('current_period_end' in item)) return false;
       const expires = item.current_period_end;
+      // A pending, unpaid, or delinquent subscription can still generate invoices.
+      // Never create a second subscription until the first is resolved.
+      if (item.status === 'incomplete' || item.status === 'past_due' ||
+          item.status === 'unpaid' || item.status === 'paused') return true;
       return (item.status === 'active' || item.status === 'trialing') &&
         typeof expires === 'string' && Number.isFinite(Date.parse(expires)) &&
         Date.parse(expires) > Date.now();
     });
-    if (hasMembership) return fail('An active membership already exists', 409);
+    if (hasMembership) return fail('An existing subscription must be resolved before another checkout', 409);
   } catch {
     return fail('Unable to verify existing subscriptions', 503);
   }
