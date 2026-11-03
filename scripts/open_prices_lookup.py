@@ -8,6 +8,7 @@ No database writes. Respect upstream data licensing and attribution.
 import argparse
 import datetime as dt
 import json
+import math
 import urllib.parse
 import urllib.request
 
@@ -45,9 +46,9 @@ def fetch_prices(barcode, currency="CAD", max_age_days=7):
             continue
         if not cutoff <= observed <= dt.datetime.now(dt.timezone.utc).date():
             continue
-        if not 0 <= price < 100000:
+        if not math.isfinite(price) or not 0 <= price < 100000:
             continue
-        location = item.get("location") or {}
+        location = item.get("location") or {}\n        if not isinstance(location, dict):\n            location = {}
         output.append({
             "product_code": barcode,
             "price": round(price, 2),
