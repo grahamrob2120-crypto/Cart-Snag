@@ -11,6 +11,7 @@ import argparse
 import csv
 import datetime as dt
 import json
+import math
 import os
 import sys
 import urllib.parse
@@ -44,11 +45,14 @@ def validate(row, now):
     if not row["price_minor"].isdigit() or int(row["price_minor"]) < 0:
         raise ValueError("Invalid price")
     quantity = float(row["unit_quantity"])
-    if not 0 < quantity < 1_000_000:
+    if not math.isfinite(quantity) or not 0 < quantity < 1_000_000:
         raise ValueError("Invalid quantity")
     url = urllib.parse.urlparse(row["source_url"])
-    if url.scheme != "https" or not url.hostname or url.username or url.password:
+    if url.scheme != "https" or not url.hostname or url.username or url.password or url.port not in (None, 443):
         raise ValueError("Invalid HTTPS source")
+    approved = {host.strip().lower() for host in os.environ.get('CART_SNAG_APPROVED_RETAILER_HOSTS', '').split(',') if host.strip()}
+    if not approved or url.hostname.lower() not in approved:
+        raise ValueError("Retailer host not on explicitly approved source list")
     verified = parse_date(row["verified_at"])
     expires = parse_date(row["expires_at"])
     if verified > now + dt.timedelta(minutes=5) or verified < now - dt.timedelta(hours=24):
