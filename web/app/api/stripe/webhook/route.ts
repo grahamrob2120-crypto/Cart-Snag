@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
   const subscriptionId = data && 'subscription' in data && typeof data.subscription === 'string'
     ? data.subscription : event.type.startsWith('customer.subscription.') ? objectId : null;
   const customerId = data && 'customer' in data && typeof data.customer === 'string' ? data.customer : null;
+  if (!subscriptionId || !/^sub_[A-Za-z0-9]+$/.test(subscriptionId)) return response('Subscription identifier unavailable', 503);
   try {
     const endpoint = new URL('/rest/v1/cart_snag_stripe_events?on_conflict=id', dbOrigin);
     const saved = await fetch(endpoint, {
@@ -118,8 +119,9 @@ export async function POST(request: NextRequest) {
         typeof price.id === 'string' ? price.id : null;
       const periodEnd = firstItem && typeof firstItem === 'object' &&
         'current_period_end' in firstItem ? firstItem.current_period_end : null;
-      const expires = typeof periodEnd === 'number' && Number.isSafeInteger(periodEnd)
+      const expires = typeof periodEnd === 'number' && Number.isSafeInteger(periodEnd) && periodEnd > 0 && periodEnd < 8640000000000
         ? new Date(periodEnd * 1000).toISOString() : null;
+      if ((status === 'active' || status === 'trialing') && !expires) return response('Subscription period unavailable', 503);
       if (!priceId || ![process.env.STRIPE_PRICE_MONTHLY_CAD, process.env.STRIPE_PRICE_ANNUAL_CAD].includes(priceId))
         return response('Unknown subscription price', 503);
       const endpoint = new URL('/rest/v1/cart_snag_stripe_subscriptions?on_conflict=stripe_subscription_id', dbOrigin);
