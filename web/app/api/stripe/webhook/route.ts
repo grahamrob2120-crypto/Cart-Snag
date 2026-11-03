@@ -126,6 +126,23 @@ export async function POST(request: NextRequest) {
       if ((status === 'active' || status === 'trialing') && !expires) return response('Subscription period unavailable', 503);
       if (!priceId || ![process.env.STRIPE_PRICE_MONTHLY_CAD, process.env.STRIPE_PRICE_ANNUAL_CAD].includes(priceId))
         return response('Unknown subscription price', 503);
+      // Never allow an existing Stripe subscription to be reassigned to a different user.
+      const existingEndpoint = new URL('/rest/v1/cart_snag_stripe_subscriptions', dbOrigin);
+      existingEndpoint.searchParams.set('select', 'user_id,stripe_customer_id');
+      existingEndpoint.searchParams.set('stripe_subscription_id', 'eq.' + subscriptionId);
+      const existingResponse = await fetch(existingEndpoint, {
+        headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!existingResponse.ok) return response('Subscription ownership verification failed', 503);
+      const existingRows: unknown = await existingResponse.json();
+      if (!Array.isArray(existingRows) || existingRows.length > 1) return response('Invalid ownership record', 503);
+      const existing = existingRows[0];
+      if (existing && (typeof existing !== 'object' ||
+        !('user_id' in existing) || existing.user_id !== owner ||
+        !('stripe_customer_id' in existing) || existing.stripe_customer_id !== customer))
+        return response('Subscription ownership conflict', 409);
       const endpoint = new URL('/rest/v1/cart_snag_stripe_subscriptions?on_conflict=stripe_subscription_id', dbOrigin);
       const saved = await fetch(endpoint, {
         method: 'POST',
