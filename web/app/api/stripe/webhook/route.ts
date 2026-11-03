@@ -141,8 +141,11 @@ export async function POST(request: NextRequest) {
         priceId === process.env.STRIPE_PRICE_ANNUAL_CAD ? 'year' : null;
       if (!expectedInterval || !('interval' in priceRecurring) ||
         priceRecurring.interval !== expectedInterval) return response('Unexpected billing interval', 503);
-      const periodEnd = firstItem && typeof firstItem === 'object' &&
+      // Stripe API versions differ: older subscriptions expose this at the
+      // subscription root, while newer versions expose it on subscription items.
+      const itemPeriodEnd = firstItem && typeof firstItem === 'object' &&
         'current_period_end' in firstItem ? firstItem.current_period_end : null;
+      const periodEnd = typeof itemPeriodEnd === 'number' ? itemPeriodEnd : s.current_period_end;
       const expires = typeof periodEnd === 'number' && Number.isSafeInteger(periodEnd) && periodEnd > 0 && periodEnd < 8640000000000
         ? new Date(periodEnd * 1000).toISOString() : null;
       if ((status === 'active' || status === 'trialing') && !expires) return response('Subscription period unavailable', 503);
