@@ -11,7 +11,7 @@ export default function VerifiedOffers() {
  const [sort,setSort]=useState<'price'|'recent'>('price');
  const [token,setToken]=useState('');
  const [shoppingList,setShoppingList]=useState<Offer[]>([]);
- useEffect(() => { try { const raw=window.localStorage.getItem('cart-snag-shopping-list'); const data=raw?JSON.parse(raw):[]; if(Array.isArray(data))setShoppingList(data.filter((x:unknown)=>!!x&&typeof x==='object'&&'id' in x&&'price_minor' in x).slice(0,100)); } catch { setShoppingList([]); } },[]);
+ useEffect(() => { try { const raw=window.localStorage.getItem('cart-snag-shopping-list'); const data=raw?JSON.parse(raw):[]; if(Array.isArray(data))setShoppingList(data.filter((x:unknown):x is Offer=>{if(!x||typeof x!=='object')return false;const o=x as Record<string,unknown>;return typeof o.id==='number'&&Number.isSafeInteger(o.id)&&typeof o.price_minor==='number'&&Number.isSafeInteger(o.price_minor)&&o.price_minor>=0&&['retailer','store_location','product_name','currency','unit_label','source_url','verified_at'].every(k=>typeof o[k]==='string')&&typeof o.unit_quantity==='number'&&Number.isFinite(o.unit_quantity)&&o.unit_quantity>0&&['CAD','USD'].includes(o.currency as string);}).slice(0,100)); } catch { setShoppingList([]); } },[]);
  function saveList(next:Offer[]){setShoppingList(next);try{window.localStorage.setItem('cart-snag-shopping-list',JSON.stringify(next));}catch{setMessage('Shopping list could not be saved on this device.');}}
  function addItem(offer:Offer){if(shoppingList.some(x=>x.id===offer.id))return;saveList([...shoppingList,offer].slice(0,100));}
  function removeItem(id:number){saveList(shoppingList.filter(x=>x.id!==id));}
