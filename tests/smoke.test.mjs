@@ -10,8 +10,12 @@ test('Stripe is the only advertised checkout provider', () => {
   assert.doesNotMatch(html + app, /PayPal/i);
 });
 
-test('checkout is not presented as functional until server integration exists', () => {
-  assert.match(html, /<button[^>]*disabled[^>]*>Stripe checkout/);
+test('checkout controls invoke the authenticated backend', () => {
+  assert.match(html, /id="checkoutMonthly"/);
+  assert.match(html, /id="checkoutAnnual"/);
+  assert.match(app, /startStripeCheckout\('monthly'\)/);
+  assert.match(app, /startStripeCheckout\('annual'\)/);
+  assert.match(app, /session\.access_token/);
 });
 
 test('receipt upload guards account and country switches', () => {
