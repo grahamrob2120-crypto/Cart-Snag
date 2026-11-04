@@ -31,7 +31,7 @@ $('authForm').addEventListener('submit',async e=>{e.preventDefault();const email
 $('resetPassword').addEventListener('click',async()=>{const email=$('email').value.trim();if(!email){msg('Enter your email address first.',true);return}const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});msg(error?error.message:'If an account exists, a password reset email will be sent.',!!error)});
 supabase.auth.onAuthStateChange((event)=>{if(event==='PASSWORD_RECOVERY'){const password=prompt('Enter a new password (at least 8 characters)');if(password&&password.length>=8)supabase.auth.updateUser({password}).then(({error})=>msg(error?error.message:'Password updated.',!!error));else if(password)msg('Password must be at least 8 characters.',true)}});
 $('signOut').addEventListener('click',async()=>{const {error}=await supabase.auth.signOut();if(error){msg(error.message,true);return}user=null;updateAuthUI();msg('Signed out.')});
-$('country').addEventListener('change',()=>{country=$('country').value;if(user)loadPrivate();else privateLoadVersion++;msg(country==='CA'?'Showing Canadian records in CAD.':'Showing US records in USD.')});
+$('country').addEventListener('change',()=>{country=$('country').value;privateLoadVersion++;receiptRows=[];$('receiptList').replaceChildren();$('watchList').replaceChildren();renderReceiptSummary();if(user)loadPrivate();msg(country==='CA'?'Showing Canadian records in CAD.':'Showing US records in USD.')});
 $('searchButton').addEventListener('click',()=>openFlyers());$('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')openFlyers()});
 $('receiptForm').addEventListener('submit',async e=>{
  e.preventDefault();
