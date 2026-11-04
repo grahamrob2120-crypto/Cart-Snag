@@ -38,7 +38,7 @@ $('receiptForm').addEventListener('submit',async e=>{
  if(!user){showAuth();return}
  const ownerId=user.id,selectedCountry=country;
  const store=$('store').value.trim(),total=Number($('total').value),savings=Number($('savings').value),purchased_at=$('purchaseDate').value;
- if(!store||!purchased_at||!Number.isFinite(total)||total<0||!Number.isFinite(savings)||savings<0){msg('Check the receipt fields.',true);return}
+ if(!store||!/^\d{4}-\d{2}-\d{2}$/.test(purchased_at)||purchased_at>localISODate()||!Number.isFinite(total)||total<0||total>999999||!Number.isFinite(savings)||savings<0||savings>999999){msg('Check the receipt fields. Future dates and invalid amounts are not allowed.',true);return}
  const submit=$('receiptForm').querySelector('button[type=submit]');
  const file=$('receiptImage').files[0];
  if(file&&(file.size>5242880||!['image/jpeg','image/png','image/webp'].includes(file.type))){msg('Receipt image must be JPG, PNG or WebP under 5 MB.',true);return}
@@ -94,6 +94,6 @@ async function startStripeCheckout(plan){
 }
 $('checkoutMonthly').addEventListener('click',()=>startStripeCheckout('monthly'));
 $('checkoutAnnual').addEventListener('click',()=>startStripeCheckout('annual'));
-$('year').textContent=String(new Date().getFullYear());$('purchaseDate').value=localISODate();renderGroups();updateMode('login');
+$('year').textContent=String(new Date().getFullYear());$('purchaseDate').max=localISODate();$('purchaseDate').value=localISODate();renderGroups();updateMode('login');
 supabase.auth.onAuthStateChange((_event,session)=>{const next=session?.user||null;if(user?.id===next?.id)return;user=next;queueMicrotask(updateAuthUI)});
 const {data:{user:currentUser},error:initError}=await supabase.auth.getUser();if(initError&&initError.name!=='AuthSessionMissingError')msg(initError.message,true);user=currentUser||null;updateAuthUI();
