@@ -1,0 +1,17 @@
+name: Cart Snag smoke tests
+on:
+  push:
+    branches: [production-rebuild]
+  pull_request:
+    branches: [production-rebuild]
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/smoke.test.mjs
