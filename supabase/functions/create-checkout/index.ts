@@ -2,7 +2,7 @@ import Stripe from "npm:stripe@17.7.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.0";
 
 const json = (data: unknown, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
+  new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json", "cache-control": "no-store", "Access-Control-Allow-Origin": Deno.env.get("APP_ORIGIN") || "", "Vary": "Origin" } });
 
 Deno.serve(async (req: Request) => {
   const cors = { "Access-Control-Allow-Origin": Deno.env.get("APP_ORIGIN") || "", "Access-Control-Allow-Headers": "authorization, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
