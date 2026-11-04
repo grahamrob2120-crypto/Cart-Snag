@@ -6,7 +6,7 @@ const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const app = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
 
 test('Stripe is the only advertised checkout provider', () => {
-  assert.match(html, /Stripe checkout/);
+  assert.match(html, /Stripe monthly/);
   assert.doesNotMatch(html + app, /PayPal/i);
 });
 
