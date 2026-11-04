@@ -37,6 +37,11 @@ jobs:
           page.feed(Path("index.html").read_text())
           assert "./app.js" in page.scripts, "Missing app module"
           assert Path("app.js").is_file()
+          import re
+          script = Path("app.js").read_text()
+          referenced = set(re.findall(r"\$\('([^']+)'\)", script))
+          missing = referenced - page.ids
+          assert not missing, f"JavaScript references missing HTML IDs: {sorted(missing)}"
           required = {"country", "authForm", "receiptForm", "watchForm", "checkoutMonthly", "checkoutAnnual", "status"}
           assert required <= page.ids, f"Missing elements: {required-page.ids}"
           print("Frontend structure validated")
