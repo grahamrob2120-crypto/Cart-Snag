@@ -10,7 +10,35 @@ function money(value){return new Intl.NumberFormat(country==='CA'?'en-CA':'en-US
 function showAuth(){ $('authBox').classList.remove('hidden');$('authBox').scrollIntoView({behavior:'smooth',block:'center'});}
 function updateAuthUI(){ if(displayedAccountId!==user?.id){privateLoadVersion++;receiptRows=[];$('receiptList').replaceChildren();$('watchList').replaceChildren();renderReceiptSummary();displayedAccountId=user?.id??null} $('memberArea').classList.toggle('hidden',!user);$('guestCallout').classList.toggle('hidden',!!user);$('accountButton').classList.toggle('hidden',!!user);$('signOut').classList.toggle('hidden',!user);$('authBox').classList.add('hidden');$('userEmail').textContent=user?.email||'';if(user)loadPrivate();}
 function updateMode(next){mode=next;$('authSubmit').textContent=mode==='login'?'Sign in':'Create account';$('loginTab').className='btn '+(mode==='login'?'':'light');$('registerTab').className='btn '+(mode==='register'?'':'light');$('password').autocomplete=mode==='login'?'current-password':'new-password';$('password').minLength=mode==='register'?8:0}
-function openFlyers(){const term=$('searchInput').value.trim();if(term)msg('Search the current flyers for: '+term);window.open('https://flipp.com/','_blank','noopener,noreferrer')}
+async function openFlyers(){
+ const term=$('searchInput').value.trim();
+ if(country!=='CA'||term.length<2){window.open('https://flipp.com/','_blank','noopener,noreferrer');return}
+ const root=$('verifiedPrices'),selectedCountry=country,request=++priceLoadVersion;
+ root.replaceChildren(el('p','muted','Checking free Canadian grocery price data…'));
+ $('verifiedPricesSection').scrollIntoView({behavior:'smooth',block:'start'});
+ try{
+  const url=new URL('https://epiceries.ca/api');url.searchParams.set('endpoint','search');url.searchParams.set('q',term.slice(0,100));url.searchParams.set('limit','20');
+  const response=await fetch(url,{signal:AbortSignal.timeout(8000)});
+  if(!response.ok)throw new Error('Price source unavailable');
+  const payload=await response.json();
+  if(request!==priceLoadVersion||country!==selectedCountry)return;
+  if(payload.ok!==true||!Array.isArray(payload.data?.results))throw new Error('Unexpected price response');
+  root.replaceChildren(el('p','notice','Québec retailer comparison only — not verified for your local store. Confirm price and availability before shopping.'));
+  let count=0;
+  for(const item of payload.data.results){
+   const price=Number(item.price),updated=Date.parse(item.updated);
+   if(!Number.isFinite(price)||price<0||!Number.isFinite(updated)||updated>Date.now()||Date.now()-updated>7*86400000)continue;
+   const row=el('div','entry'),details=el('div');
+   details.append(el('strong','',String(item.name||'Product').slice(0,180)),el('p','fine',String(item.store||'Retailer')+' · '+new Date(updated).toLocaleDateString()+' · Québec comparison'));
+   const priceLabel=el('strong','price',new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD'}).format(price));
+   row.append(details,priceLabel);
+   if(typeof item.url==='string'&&item.url.startsWith('https://epiceries.ca/')){const link=el('a','fine','View source');link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';details.append(link)}
+   root.append(row);count++;
+  }
+  if(!count)root.append(el('p','muted','Unavailable at this time. No recently updated matching prices.'));
+  const credit=el('a','fine','Price data: épiceries.ca');credit.href='https://epiceries.ca/developers';credit.target='_blank';credit.rel='noopener noreferrer';root.append(credit);
+ }catch(error){if(request!==priceLoadVersion||country!==selectedCountry)return;root.replaceChildren(el('p','notice','Unavailable at this time. Free price source could not be reached.'))}
+}
 function renderGroups(){const root=$('categories');root.replaceChildren();for(const [name,icon] of groups){const card=el('button','card');card.style.textAlign='left';card.append(el('div','emoji',icon),el('h3','',name),el('p','muted','Find current retailer offers'));card.addEventListener('click',()=>{$('searchInput').value=name;$('offersSection').scrollIntoView({behavior:'smooth',block:'start'})});root.append(card)}}
 async function loadPrivate(){if(!user)return;const version=++privateLoadVersion,requestUserId=user.id,requestCountry=country;await Promise.all([loadReceipts(version,requestUserId,requestCountry),loadWatches(version,requestUserId,requestCountry)]);}
 async function loadReceipts(version=privateLoadVersion,requestUserId=user?.id,requestCountry=country){if(!requestUserId)return;const data=[];let offset=0;while(true){const {data:page,error}=await supabase.from('receipts').select('id,store_name,total,savings,purchased_at,country_code,image_path').eq('user_id',requestUserId).eq('country_code',requestCountry).order('purchased_at',{ascending:false}).order('id',{ascending:false}).range(offset,offset+499);if(version!==privateLoadVersion||requestUserId!==user?.id||requestCountry!==country)return;if(error){msg(error.message,true);return}data.push(...page);if(page.length<500)break;offset+=500;}
