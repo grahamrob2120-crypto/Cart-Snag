@@ -94,6 +94,54 @@ async function startStripeCheckout(plan){
 }
 $('checkoutMonthly').addEventListener('click',()=>startStripeCheckout('monthly'));
 $('checkoutAnnual').addEventListener('click',()=>startStripeCheckout('annual'));
+function renderPlannerMessage(id,message){$(id).replaceChildren(el('p','notice',message))}
+$('portionForm').addEventListener('submit',event=>{
+ event.preventDefault();
+ const budget=Number($('portionBudget').value),portions=Number($('portionCount').value);
+ if(!Number.isFinite(budget)||budget<=0||!Number.isInteger(portions)||portions<1||portions>100){renderPlannerMessage('portionResult','Enter a valid budget and portion count.');return}
+ const lines=$('portionItems').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ if(!lines.length||lines.length>60){renderPlannerMessage('portionResult','Enter 1 to 60 priced food items.');return}
+ const items=[];
+ for(const line of lines){
+  const parts=line.split('|').map(x=>x.trim());
+  if(parts.length!==4){renderPlannerMessage('portionResult','Use: food group | item | package price | portions per package.');return}
+  const group=groups.find(g=>g[0].toLowerCase()===parts[0].toLowerCase());
+  const price=Number(parts[2]),yieldCount=Number(parts[3]);
+  if(!group||!parts[1]||parts[1].length>80||!Number.isFinite(price)||price<=0||price>100000||!Number.isInteger(yieldCount)||yieldCount<1||yieldCount>10000){renderPlannerMessage('portionResult','Check food groups, names, prices, and package portions.');return}
+  items.push({group:group[0],name:parts[1],priceCents:Math.round(price*100),yieldCount});
+ }
+ const budgetCents=Math.round(budget*100);
+ const candidates=items.map(item=>({...item,quantity:Math.ceil(portions/item.yieldCount)})).filter(item=>item.priceCents*item.quantity<=budgetCents);
+ if(!candidates.length){renderPlannerMessage('portionResult','Unavailable at this budget using the entered prices and required portions.');return}
+ // Prefer a complete meal with a grain, vegetable and protein where possible.
+ const categories=[['Meat','Dairy'],['Vegetables'],['Grains']];
+ let best=null;
+ for(const protein of [null,...candidates.filter(x=>categories[0].includes(x.group))]){
+  for(const vegetable of [null,...candidates.filter(x=>x.group==='Vegetables')]){
+   for(const grain of [null,...candidates.filter(x=>x.group==='Grains')]){
+    const selected=[protein,vegetable,grain].filter(Boolean);
+    if(!selected.length||new Set(selected.map(x=>x.name+'|'+x.group)).size!==selected.length)continue;
+    const total=selected.reduce((sum,x)=>sum+x.priceCents*x.quantity,0);
+    if(total>budgetCents)continue;
+    const score=selected.length*100000000+total;
+    if(!best||score>best.score)best={selected,total,score};
+   }
+  }
+ }
+ if(!best){renderPlannerMessage('portionResult','No affordable combination found.');return}
+ const root=$('portionResult');root.replaceChildren();
+ root.append(el('h3','','Suggested grocery basket'),el('p','',money(best.total/100)+' of '+money(budgetCents/100)+' budget · '+portions+' portions per selected food item'));
+ for(const item of best.selected)root.append(el('p','',item.quantity+' × '+item.name+' ('+item.group+') — '+money(item.priceCents*item.quantity/100)));
+ root.append(el('p','fine','Budget remaining: '+money((budgetCents-best.total)/100)+'. Package portions are user estimates. This is a grocery basket suggestion, not a nutritionally complete recipe or verified retailer quote.'));
+});
+$('travelForm').addEventListener('submit',event=>{
+ event.preventDefault();
+ const near=Number($('nearPrice').value),far=Number($('farPrice').value),distance=Number($('extraKm').value),rate=Number($('costPerKm').value);
+ if([near,far,distance,rate].some(x=>!Number.isFinite(x)||x<0)||near>100000||far>100000||distance>10000||rate>100){renderPlannerMessage('travelResult','Enter valid nonnegative prices, distance and travel cost.');return}
+ const basketSaving=Math.round((near-far)*100),travelCost=Math.round(distance*rate*100),net=basketSaving-travelCost;
+ const recommendation=net>0?'Other store saves money after travel.':net<0?'Nearby store costs less overall.':'Both options cost the same under these assumptions.';
+ const root=$('travelResult');root.replaceChildren(el('h3','',recommendation),el('p','', 'Basket price difference: '+money(basketSaving/100)+' · Additional travel: '+money(travelCost/100)+' · Net saving: '+money(net/100)),el('p','fine','Estimates use your own basket prices and extra round-trip distance. No live location, routing or price verification is used.'));
+});
 $('year').textContent=String(new Date().getFullYear());$('purchaseDate').max=localISODate();$('purchaseDate').value=localISODate();renderGroups();updateMode('login');
 supabase.auth.onAuthStateChange((_event,session)=>{const next=session?.user||null;if(user?.id===next?.id)return;user=next;queueMicrotask(updateAuthUI)});
 const {data:{user:currentUser},error:initError}=await supabase.auth.getUser();if(initError&&initError.name!=='AuthSessionMissingError')msg(initError.message,true);user=currentUser||null;updateAuthUI();
