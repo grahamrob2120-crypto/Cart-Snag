@@ -17,12 +17,15 @@ test('core account and receipt workflows remain available',()=>{
   for(const id of ['country','searchInput','searchButton','authForm','loginTab','registerTab','resetPassword','receiptForm','receiptList','watchForm','watchList','exportReceipts','signOut','memberArea'])
     assert.ok(ids.includes(id),'Missing workflow element: '+id);
 });
-test('membership is clearly not accepting payments before PayPal is ready',()=>{
-  assert.match(html,/PayPal checkout — coming next/);
-  assert.match(html,/No subscription is active/);
+test('membership displays Stripe-only recurring plans',()=>{
+  assert.match(html,/Stripe monthly — \$0\.99/);
+  assert.match(html,/Stripe annual — \$10\.99/);
+  assert.match(app,/cart-snag-stripe-checkout/);
+  assert.doesNotMatch(html,/PayPal/i);
+  assert.doesNotMatch(app,/PayPal/i);
 });
 test('five food groups remain configured',()=>{
-  for(const name of ['Meat & protein','Dairy','Vegetables','Fruits','Grains'])
+  for(const name of ['Meat','Dairy','Vegetables','Fruits','Grains'])
     assert.ok(app.includes(name),'Missing food group: '+name);
 });
 test('browser code contains no server-side credentials',()=>{
