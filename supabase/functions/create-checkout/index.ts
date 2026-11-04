@@ -5,6 +5,8 @@ const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
 Deno.serve(async (req: Request) => {
+  const cors = { "Access-Control-Allow-Origin": Deno.env.get("APP_ORIGIN") || "", "Access-Control-Allow-Headers": "authorization, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
   const origin = Deno.env.get("APP_ORIGIN");
   const secret = Deno.env.get("STRIPE_SECRET_KEY");
@@ -35,7 +37,7 @@ Deno.serve(async (req: Request) => {
       allow_promotion_codes: false,
     });
     if (!session.url) return json({ error: "Checkout unavailable" }, 502);
-    return json({ url: session.url });
+    return new Response(JSON.stringify({url:session.url}), {headers:{"content-type":"application/json",...cors}});
   } catch (e) {
     console.error("Stripe checkout failed", e instanceof Error ? e.message : "unknown error");
     return json({ error: "Unable to create checkout" }, 502);
