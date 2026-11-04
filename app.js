@@ -2,7 +2,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const supabase = createClient('https://cymrqyxknfocewznwpcn.supabase.co','sb_publishable_DyjUfhmrSzg3nGe06OV8Rw_lwmHV4hA');
 const $ = id => document.getElementById(id);
 const localISODate = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-const groups=[['Meat','🥩'],['Dairy','🧀'],['Vegetables','🥦'],['Fruits','🍓'],['Grains','🌾']];
+const groups=[['Meat','🥩'],['Seafood','🐟'],['Dairy','🧀'],['Eggs','🥚'],['Vegetables','🥦'],['Fruits','🍓'],['Grains','🌾'],['Bakery','🍞'],['Frozen foods','🧊'],['Canned goods','🥫'],['Snacks','🍿'],['Beverages','🥤'],['Condiments','🫙'],['Spices','🌶️'],['Baking supplies','🧁'],['Household','🏠'],['Cleaning','🧹'],['Laundry','🧺'],['Paper products','🧻'],['Personal care','🧴'],['Baby care','🍼'],['Pet supplies','🐾']];const mealGroups=['Meat','Dairy','Vegetables','Fruits','Grains'];
 let user=null, mode='login', country='CA',receiptRows=[],privateLoadVersion=0,displayedAccountId=null;const currentYear=new Date().getFullYear();for(let year=currentYear;year>=currentYear-5;year--){const option=document.createElement('option');option.value=String(year);option.textContent=String(year);$('receiptYear').append(option)}
 const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node};
 function msg(text,error=false){$('status').textContent=text;$('status').classList.toggle('error',error)}
@@ -105,7 +105,7 @@ $('portionForm').addEventListener('submit',event=>{
  for(const line of lines){
   const parts=line.split('|').map(x=>x.trim());
   if(parts.length!==4){renderPlannerMessage('portionResult','Use: food group | item | package price | portions per package.');return}
-  const group=groups.find(g=>g[0].toLowerCase()===parts[0].toLowerCase());
+  const group=groups.find(g=>mealGroups.includes(g[0])&&g[0].toLowerCase()===parts[0].toLowerCase());
   const price=Number(parts[2]),yieldCount=Number(parts[3]);
   if(!group||!parts[1]||parts[1].length>80||!Number.isFinite(price)||price<=0||price>100000||!Number.isInteger(yieldCount)||yieldCount<1||yieldCount>10000){renderPlannerMessage('portionResult','Check food groups, names, prices, and package portions.');return}
   items.push({group:group[0],name:parts[1],priceCents:Math.round(price*100),yieldCount});
