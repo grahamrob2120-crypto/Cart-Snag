@@ -1,6 +1,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
 const supabase = createClient('https://cymrqyxknfocewznwpcn.supabase.co','sb_publishable_DyjUfhmrSzg3nGe06OV8Rw_lwmHV4hA');
 const $ = id => document.getElementById(id);
+const localISODate = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 const groups=[['Meat','🥩'],['Dairy','🧀'],['Vegetables','🥦'],['Fruits','🍓'],['Grains','🌾']];
 let user=null, mode='login', country='CA',receiptRows=[],privateLoadVersion=0;const currentYear=new Date().getFullYear();for(let year=currentYear;year>=currentYear-5;year--){const option=document.createElement('option');option.value=String(year);option.textContent=String(year);$('receiptYear').append(option)}
 const el=(tag,cls,text)=>{const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node};
@@ -56,7 +57,7 @@ $('receiptForm').addEventListener('submit',async e=>{
   receiptSaved=true;
   if(user?.id===ownerId&&country===selectedCountry){
    $('receiptForm').reset();
-   $('purchaseDate').value=new Date().toLocaleDateString('en-CA');
+   $('purchaseDate').value=localISODate();
    $('savings').value='0';
    msg('Receipt saved to your private account.');
    await loadReceipts();
@@ -93,6 +94,6 @@ async function startStripeCheckout(plan){
 }
 $('checkoutMonthly').addEventListener('click',()=>startStripeCheckout('monthly'));
 $('checkoutAnnual').addEventListener('click',()=>startStripeCheckout('annual'));
-$('year').textContent=String(new Date().getFullYear());$('purchaseDate').value=new Date().toLocaleDateString('en-CA');renderGroups();updateMode('login');
+$('year').textContent=String(new Date().getFullYear());$('purchaseDate').value=localISODate();renderGroups();updateMode('login');
 supabase.auth.onAuthStateChange((_event,session)=>{const next=session?.user||null;if(user?.id===next?.id)return;user=next;queueMicrotask(updateAuthUI)});
 const {data:{user:currentUser},error:initError}=await supabase.auth.getUser();if(initError&&initError.name!=='AuthSessionMissingError')msg(initError.message,true);user=currentUser||null;updateAuthUI();
