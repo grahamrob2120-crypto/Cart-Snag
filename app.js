@@ -38,7 +38,7 @@ $('receiptForm').addEventListener('submit',async e=>{
  if(!user){showAuth();return}
  const ownerId=user.id,selectedCountry=country;
  const store=$('store').value.trim(),total=Number($('total').value),savings=Number($('savings').value),purchased_at=$('purchaseDate').value;
- if(!store||!/^\d{4}-\d{2}-\d{2}$/.test(purchased_at)||Number.isNaN(Date.parse(purchased_at+'T00:00:00Z'))||new Date(purchased_at+'T00:00:00Z').toISOString().slice(0,10)!==purchased_at||purchased_at>localISODate()||!Number.isFinite(total)||total<0||total>999999||!Number.isFinite(savings)||savings<0||savings>999999){msg('Check the receipt fields. Future dates and invalid amounts are not allowed.',true);return}
+ if(store.length>160||!store||!/^\d{4}-\d{2}-\d{2}$/.test(purchased_at)||Number.isNaN(Date.parse(purchased_at+'T00:00:00Z'))||new Date(purchased_at+'T00:00:00Z').toISOString().slice(0,10)!==purchased_at||purchased_at>localISODate()||!Number.isFinite(total)||total<0||total>999999||!Number.isFinite(savings)||savings<0||savings>999999){msg('Check the receipt fields. Future dates and invalid amounts are not allowed.',true);return}
  const submit=$('receiptForm').querySelector('button[type=submit]');
  const file=$('receiptImage').files[0];
  if(file&&(file.size>5242880||!['image/jpeg','image/png','image/webp'].includes(file.type))){msg('Receipt image must be JPG, PNG or WebP under 5 MB.',true);return}
