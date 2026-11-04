@@ -72,6 +72,27 @@ $('receiptForm').addEventListener('submit',async e=>{
  }
 });
 $('watchForm').addEventListener('submit',async e=>{e.preventDefault();if(!user){showAuth();return}const term=$('watchTerm').value.trim().toLowerCase();if(term.length<2)return;const {error}=await supabase.from('saved_searches').insert({user_id:user.id,term,country_code:country});if(error)msg(error.code==='23505'?'That item is already on your list.':error.message,error.code!=='23505');else{$('watchTerm').value='';msg('Item saved to your watchlist.');loadWatches()}});
+async function startStripeCheckout(plan){
+ if(!user){updateMode('login');showAuth();msg('Sign in before subscribing.',true);return}
+ const button=$(plan==='monthly'?'checkoutMonthly':'checkoutAnnual');
+ button.disabled=true;
+ try{
+  const {data:{session},error:sessionError}=await supabase.auth.getSession();
+  if(sessionError||!session?.access_token)throw new Error('Your session expired. Sign in again.');
+  const response=await fetch('https://cymrqyxknfocewznwpcn.supabase.co/functions/v1/cart-snag-stripe-checkout',{
+   method:'POST',
+   headers:{'content-type':'application/json','authorization':'Bearer '+session.access_token,'apikey':'sb_publishable_DyjUfhmrSzg3nGe06OV8Rw_lwmHV4hA'},
+   body:JSON.stringify({plan,country})
+  });
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(result.error||'Checkout is currently unavailable.');
+  const url=new URL(result.url);
+  if(url.protocol!=='https:'||!url.hostname.endsWith('.stripe.com'))throw new Error('Invalid Stripe checkout destination.');
+  location.assign(url.href);
+ }catch(error){msg(error?.message||'Checkout failed.',true);button.disabled=false}
+}
+$('checkoutMonthly').addEventListener('click',()=>startStripeCheckout('monthly'));
+$('checkoutAnnual').addEventListener('click',()=>startStripeCheckout('annual'));
 $('year').textContent=String(new Date().getFullYear());$('purchaseDate').value=new Date().toLocaleDateString('en-CA');renderGroups();updateMode('login');
 supabase.auth.onAuthStateChange((_event,session)=>{const next=session?.user||null;if(user?.id===next?.id)return;user=next;queueMicrotask(updateAuthUI)});
 const {data:{user:currentUser},error:initError}=await supabase.auth.getUser();if(initError&&initError.name!=='AuthSessionMissingError')msg(initError.message,true);user=currentUser||null;updateAuthUI();
