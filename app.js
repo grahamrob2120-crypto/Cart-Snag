@@ -139,8 +139,8 @@ $('travelForm').addEventListener('submit',event=>{
  const near=Number($('nearPrice').value),far=Number($('farPrice').value),distance=Number($('extraKm').value),rate=Number($('costPerKm').value);
  if([near,far,distance,rate].some(x=>!Number.isFinite(x)||x<0)||near>100000||far>100000||distance>10000||rate>100){renderPlannerMessage('travelResult','Enter valid nonnegative prices, distance and travel cost.');return}
  const basketSaving=Math.round((near-far)*100),travelCost=Math.round(distance*rate*100),net=basketSaving-travelCost;
- const recommendation=net>0?'Other store saves money after travel.':net<0?'Nearby store costs less overall.':'Both options cost the same under these assumptions.';
- const root=$('travelResult');root.replaceChildren(el('h3','',recommendation),el('p','', 'Basket price difference: '+money(basketSaving/100)+' · Additional travel: '+money(travelCost/100)+' · Net saving: '+money(net/100)),el('p','fine','Estimates use your own basket prices and extra round-trip distance. No live location, routing or price verification is used.'));
+ const recommendation=net>0?'Other store saves money after travel.':net<0?'Nearby store costs less overall.':'Both options cost the same under these assumptions.';const breakEven=rate>0&&basketSaving>0?' · Break-even extra distance: '+(basketSaving/100/rate).toFixed(1)+' km':' ';
+ const root=$('travelResult');root.replaceChildren(el('h3','',recommendation),el('p','', 'Basket price difference: '+money(basketSaving/100)+' · Additional travel: '+money(travelCost/100)+' · Net saving: '+money(net/100)+breakEven),el('p','fine','Estimates use your own basket prices and extra round-trip distance. No live location, routing or price verification is used.'));
 });
 $('year').textContent=String(new Date().getFullYear());$('purchaseDate').max=localISODate();$('purchaseDate').value=localISODate();renderGroups();updateMode('login');
 supabase.auth.onAuthStateChange((_event,session)=>{const next=session?.user||null;if(user?.id===next?.id)return;user=next;queueMicrotask(updateAuthUI)});
