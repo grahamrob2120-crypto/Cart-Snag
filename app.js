@@ -72,7 +72,7 @@ $('receiptForm').addEventListener('submit',async e=>{
   submit.disabled=false;
  }
 });
-$('watchForm').addEventListener('submit',async e=>{e.preventDefault();if(!user){showAuth();return}const term=$('watchTerm').value.trim().toLowerCase();if(term.length<2)return;const {error}=await supabase.from('saved_searches').insert({user_id:user.id,term,country_code:country});if(error)msg(error.code==='23505'?'That item is already on your list.':error.message,error.code!=='23505');else{$('watchTerm').value='';msg('Item saved to your watchlist.');loadWatches()}});
+$('watchForm').addEventListener('submit',async e=>{e.preventDefault();if(!user){showAuth();return}const ownerId=user.id,selectedCountry=country,term=$('watchTerm').value.trim().toLowerCase();if(term.length<2)return;const {error}=await supabase.from('saved_searches').insert({user_id:ownerId,term,country_code:selectedCountry});if(user?.id!==ownerId||country!==selectedCountry)return;if(error)msg(error.code==='23505'?'That item is already on your list.':error.message,error.code!=='23505');else{$('watchTerm').value='';msg('Item saved to your watchlist.');loadWatches()}});
 async function startStripeCheckout(plan){
  if(!user){updateMode('login');showAuth();msg('Sign in before subscribing.',true);return}
  const button=$(plan==='monthly'?'checkoutMonthly':'checkoutAnnual');
