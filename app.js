@@ -31,7 +31,7 @@ $('authForm').addEventListener('submit',async e=>{e.preventDefault();const email
 $('resetPassword').addEventListener('click',async()=>{const email=$('email').value.trim();if(!email){msg('Enter your email address first.',true);return}const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});msg(error?error.message:'If an account exists, a password reset email will be sent.',!!error)});
 supabase.auth.onAuthStateChange((event)=>{if(event==='PASSWORD_RECOVERY'){const password=prompt('Enter a new password (at least 8 characters)');if(password&&password.length>=8)supabase.auth.updateUser({password}).then(({error})=>msg(error?error.message:'Password updated.',!!error));else if(password)msg('Password must be at least 8 characters.',true)}});
 $('signOut').addEventListener('click',async()=>{const {error}=await supabase.auth.signOut();if(error){msg(error.message,true);return}user=null;updateAuthUI();msg('Signed out.')});
-$('country').addEventListener('change',()=>{country=$('country').value;privateLoadVersion++;receiptRows=[];$('receiptList').replaceChildren();$('watchList').replaceChildren();renderReceiptSummary();if(user)loadPrivate();msg(country==='CA'?'Showing Canadian records in CAD.':'Showing US records in USD.')});
+$('country').addEventListener('change',()=>{country=$('country').value;loadVerifiedPrices();privateLoadVersion++;receiptRows=[];$('receiptList').replaceChildren();$('watchList').replaceChildren();renderReceiptSummary();if(user)loadPrivate();msg(country==='CA'?'Showing Canadian records in CAD.':'Showing US records in USD.')});
 $('searchButton').addEventListener('click',()=>openFlyers());$('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')openFlyers()});
 $('receiptForm').addEventListener('submit',async e=>{
  e.preventDefault();
@@ -142,6 +142,31 @@ $('travelForm').addEventListener('submit',event=>{
  const recommendation=net>0?'Other store saves money after travel.':net<0?'Nearby store costs less overall.':'Both options cost the same under these assumptions.';const breakEven=rate>0&&basketSaving>0?' · Break-even extra distance: '+(basketSaving/100/rate).toFixed(1)+' km':' ';
  const root=$('travelResult');root.replaceChildren(el('h3','',recommendation),el('p','', 'Basket price difference: '+money(basketSaving/100)+' · Additional travel: '+money(travelCost/100)+' · Net saving: '+money(net/100)+breakEven),el('p','fine','Estimates use your own basket prices and extra round-trip distance. No live location, routing or price verification is used.'));
 });
-$('year').textContent=String(new Date().getFullYear());$('purchaseDate').max=localISODate();$('purchaseDate').value=localISODate();renderGroups();updateMode('login');
+let priceLoadVersion=0;
+async function loadVerifiedPrices(){
+ const request=++priceLoadVersion,selectedCountry=country,root=$('verifiedPrices');
+ root.replaceChildren(el('p','muted','Checking verified prices…'));
+ const now=new Date().toISOString();
+ const {data,error}=await supabase.from('cart_snag_offers')
+  .select('product_name,food_group,retailer,store_location,price_minor,currency,verified_at,expires_at,source_url')
+  .eq('country',selectedCountry).eq('availability','verified')
+  .gt('expires_at',now).not('price_minor','is',null)
+  .order('price_minor',{ascending:true}).limit(60);
+ if(request!==priceLoadVersion||selectedCountry!==country)return;
+ root.replaceChildren();
+ if(error){root.append(el('p','notice','Unavailable at this time. Verified prices could not be retrieved.'));return}
+ const valid=(data||[]).filter(item=>item.price_minor>=0&&item.currency===(selectedCountry==='CA'?'CAD':'USD')&&groups.some(g=>g[0].toLowerCase()===String(item.food_group).toLowerCase())&&Date.parse(item.verified_at)<=Date.now()&&Date.parse(item.expires_at)>Date.now());
+ if(!valid.length){root.append(el('p','notice','Unavailable at this time. No current verified retailer prices are accessible for this country.'));return}
+ const list=el('div','stack');
+ for(const item of valid){
+  const row=el('div','entry'),detail=el('div');
+  detail.append(el('strong','',item.product_name),el('p','fine',item.retailer+' · '+item.store_location+' · verified '+new Date(item.verified_at).toLocaleString()));
+  row.append(detail,el('strong','price',money(item.price_minor/100)));
+  list.append(row);
+ }
+ root.append(list);
+}
+$('refreshVerifiedPrices').addEventListener('click',loadVerifiedPrices);
+$('year').textContent=String(new Date().getFullYear());$('purchaseDate').max=localISODate();$('purchaseDate').value=localISODate();renderGroups();loadVerifiedPrices();updateMode('login');
 supabase.auth.onAuthStateChange((_event,session)=>{const next=session?.user||null;if(user?.id===next?.id)return;user=next;queueMicrotask(updateAuthUI)});
 const {data:{user:currentUser},error:initError}=await supabase.auth.getUser();if(initError&&initError.name!=='AuthSessionMissingError')msg(initError.message,true);user=currentUser||null;updateAuthUI();
