@@ -32,8 +32,45 @@ supabase.auth.onAuthStateChange((event)=>{if(event==='PASSWORD_RECOVERY'){const 
 $('signOut').addEventListener('click',async()=>{const {error}=await supabase.auth.signOut();if(error){msg(error.message,true);return}user=null;updateAuthUI();msg('Signed out.')});
 $('country').addEventListener('change',()=>{country=$('country').value;if(user)loadPrivate();else privateLoadVersion++;msg(country==='CA'?'Showing Canadian records in CAD.':'Showing US records in USD.')});
 $('searchButton').addEventListener('click',()=>openFlyers());$('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')openFlyers()});
-$('receiptForm').addEventListener('submit',async e=>{e.preventDefault();if(!user){showAuth();return}const store=$('store').value.trim(),total=Number($('total').value),savings=Number($('savings').value),purchased_at=$('purchaseDate').value;if(!store||!purchased_at||!Number.isFinite(total)||total<0||!Number.isFinite(savings)||savings<0){msg('Check the receipt fields.',true);return}
- const submit=$('receiptForm').querySelector('button[type=submit]');submit.disabled=true;let image_path=null;const file=$('receiptImage').files[0];if(file){if(file.size>5242880||!['image/jpeg','image/png','image/webp'].includes(file.type)){msg('Receipt image must be JPG, PNG or WebP under 5 MB.',true);submit.disabled=false;return}const ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];image_path=user.id+'/'+crypto.randomUUID()+'.'+ext;const uploaded=await supabase.storage.from('receipt-images').upload(image_path,file,{contentType:file.type,upsert:false});if(uploaded.error){msg(uploaded.error.message,true);submit.disabled=false;return}}const {error}=await supabase.from('receipts').insert({user_id:user.id,store_name:store,total,savings,purchased_at,country_code:country,image_path});submit.disabled=false;if(error){if(image_path)await supabase.storage.from('receipt-images').remove([image_path]);msg(error.message,true)}else{$('receiptForm').reset();$('purchaseDate').value=new Date().toLocaleDateString('en-CA');$('savings').value='0';msg('Receipt saved to your private account.');loadReceipts()}});
+$('receiptForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ if(!user){showAuth();return}
+ const ownerId=user.id,selectedCountry=country;
+ const store=$('store').value.trim(),total=Number($('total').value),savings=Number($('savings').value),purchased_at=$('purchaseDate').value;
+ if(!store||!purchased_at||!Number.isFinite(total)||total<0||!Number.isFinite(savings)||savings<0){msg('Check the receipt fields.',true);return}
+ const submit=$('receiptForm').querySelector('button[type=submit]');
+ const file=$('receiptImage').files[0];
+ if(file&&(file.size>5242880||!['image/jpeg','image/png','image/webp'].includes(file.type))){msg('Receipt image must be JPG, PNG or WebP under 5 MB.',true);return}
+ submit.disabled=true;
+ let image_path=null,receiptSaved=false;
+ try{
+  if(file){
+   const ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];
+   image_path=ownerId+'/'+crypto.randomUUID()+'.'+ext;
+   const uploaded=await supabase.storage.from('receipt-images').upload(image_path,file,{contentType:file.type,upsert:false});
+   if(uploaded.error)throw uploaded.error;
+  }
+  if(user?.id!==ownerId||country!==selectedCountry)throw new Error('Account or country changed. Please retry your receipt.');
+  const {error}=await supabase.from('receipts').insert({user_id:ownerId,store_name:store,total,savings,purchased_at,country_code:selectedCountry,image_path});
+  if(error)throw error;
+  receiptSaved=true;
+  if(user?.id===ownerId&&country===selectedCountry){
+   $('receiptForm').reset();
+   $('purchaseDate').value=new Date().toLocaleDateString('en-CA');
+   $('savings').value='0';
+   msg('Receipt saved to your private account.');
+   await loadReceipts();
+  }
+ }catch(err){
+  msg(err?.message||'Unable to save receipt. Please try again.',true);
+ }finally{
+  if(image_path&&!receiptSaved){
+   const {error:cleanupError}=await supabase.storage.from('receipt-images').remove([image_path]);
+   if(cleanupError)msg('Receipt was not saved; uploaded photo cleanup failed. Contact support.',true);
+  }
+  submit.disabled=false;
+ }
+});
 $('watchForm').addEventListener('submit',async e=>{e.preventDefault();if(!user){showAuth();return}const term=$('watchTerm').value.trim().toLowerCase();if(term.length<2)return;const {error}=await supabase.from('saved_searches').insert({user_id:user.id,term,country_code:country});if(error)msg(error.code==='23505'?'That item is already on your list.':error.message,error.code!=='23505');else{$('watchTerm').value='';msg('Item saved to your watchlist.');loadWatches()}});
 $('year').textContent=String(new Date().getFullYear());$('purchaseDate').value=new Date().toLocaleDateString('en-CA');renderGroups();updateMode('login');
 supabase.auth.onAuthStateChange((_event,session)=>{const next=session?.user||null;if(user?.id===next?.id)return;user=next;queueMicrotask(updateAuthUI)});
