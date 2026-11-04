@@ -98,7 +98,7 @@ function renderPlannerMessage(id,message){$(id).replaceChildren(el('p','notice',
 $('portionForm').addEventListener('submit',event=>{
  event.preventDefault();
  const budget=Number($('portionBudget').value),portions=Number($('portionCount').value);
- if(!Number.isFinite(budget)||budget<=0||!Number.isInteger(portions)||portions<1||portions>100){renderPlannerMessage('portionResult','Enter a valid budget and portion count.');return}
+ if(!Number.isFinite(budget)||budget<=0||budget>100000||!Number.isInteger(portions)||portions<1||portions>100){renderPlannerMessage('portionResult','Enter a valid budget and portion count.');return}
  const lines=$('portionItems').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
  if(!lines.length||lines.length>60){renderPlannerMessage('portionResult','Enter 1 to 60 priced food items.');return}
  const items=[];
@@ -111,7 +111,7 @@ $('portionForm').addEventListener('submit',event=>{
   items.push({group:group[0],name:parts[1],priceCents:Math.round(price*100),yieldCount});
  }
  const budgetCents=Math.round(budget*100);
- const candidates=items.map(item=>({...item,quantity:Math.ceil(portions/item.yieldCount)})).filter(item=>item.priceCents*item.quantity<=budgetCents);
+ const candidates=items.map(item=>({...item,quantity:Math.ceil(portions/item.yieldCount)})).filter(item=>item.priceCents>0&&item.priceCents*item.quantity<=budgetCents);
  if(!candidates.length){renderPlannerMessage('portionResult','Unavailable at this budget using the entered prices and required portions.');return}
  // Prefer a complete meal with a grain, vegetable and protein where possible.
  const categories=[['Meat','Dairy'],['Vegetables'],['Grains']];
