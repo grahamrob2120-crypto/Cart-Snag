@@ -157,7 +157,7 @@ async function loadVerifiedPrices(){
  if(error){root.append(el('p','notice','Unavailable at this time. Verified prices could not be retrieved.'));return}
  const valid=(data||[]).filter(item=>item.price_minor>=0&&item.currency===(selectedCountry==='CA'?'CAD':'USD')&&groups.some(g=>g[0].toLowerCase()===String(item.food_group).toLowerCase())&&Date.parse(item.verified_at)<=Date.now()&&Date.parse(item.expires_at)>Date.now());
  if(!valid.length){root.append(el('p','notice','Unavailable at this time. No current verified retailer prices are accessible for this country.'));return}
- const list=el('div','stack');
+ const list=document.createDocumentFragment();
  for(const item of valid){
   const row=el('div','entry'),detail=el('div');
   detail.append(el('strong','',item.product_name),el('p','fine',item.retailer+' · '+item.store_location+' · verified '+new Date(item.verified_at).toLocaleString()));
