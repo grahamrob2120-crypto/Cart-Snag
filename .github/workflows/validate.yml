@@ -1,0 +1,43 @@
+name: Cart Snag validation
+on:
+  push:
+    branches: [production-rebuild]
+  pull_request:
+    branches: [production-rebuild]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax
+        run: node --check --input-type=module < app.js
+      - name: Verify required frontend elements
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          class Inspector(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.ids = set()
+                  self.scripts = []
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  if "id" in attrs:
+                      assert attrs["id"] not in self.ids, f"Duplicate id: {attrs['id']}"
+                      self.ids.add(attrs["id"])
+                  if tag == "script" and attrs.get("src"):
+                      self.scripts.append(attrs["src"])
+          page = Inspector()
+          page.feed(Path("index.html").read_text())
+          assert "./app.js" in page.scripts, "Missing app module"
+          assert Path("app.js").is_file()
+          required = {"country", "authForm", "receiptForm", "watchForm", "checkoutMonthly", "checkoutAnnual", "status"}
+          assert required <= page.ids, f"Missing elements: {required-page.ids}"
+          print("Frontend structure validated")
+          PY
